@@ -387,10 +387,11 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
         loop {
             tracing::info!("executing subblock");
             tracing::info!(
-                "loop count: {:?}, num_transactions_completed: {:?}, all txs num: {:?}",
+                "loop count: {:?}, num_transactions_completed: {:?}, all txs num: {:?}, SUBBLOCK_GAS_LIMIT: {}",
                 loop_count,
                 num_transactions_completed as usize,
-                current_block.body.len()
+                current_block.body.len(),
+                *SUBBLOCK_GAS_LIMIT
             );
             loop_count += 1;
             let cache_db = CacheDB::new(&rpc_db);

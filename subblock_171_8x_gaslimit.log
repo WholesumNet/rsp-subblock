@@ -1,0 +1,156 @@
+[2m2025-05-28T08:18:24.940855Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m fetching the current block and the previous block
+[2m2025-05-28T08:18:25.076947Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m setting up the spec for the block executor
+[2m2025-05-28T08:18:25.076967Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m setting up the database for the block executor
+[2m2025-05-28T08:18:25.076971Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m executing the block and with rpc db: block_number=17106222, transaction_count=105
+[2m2025-05-28T08:18:25.078579Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m executing subblock
+[2m2025-05-28T08:18:25.078608Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m loop count: 0, num_transactions_completed: 0, all txs num: 105, SUBBLOCK_GAS_LIMIT: 8000000
+[2m2025-05-28T08:18:25.078637Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m num transactions left: 105
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+[2m2025-05-28T08:19:18.412801Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m successfully executed subblock: num_transactions_completed=0, upper=76
+[2m2025-05-28T08:19:18.412842Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m accumulating the logs bloom
+[2m2025-05-28T08:19:18.417258Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m executing subblock
+[2m2025-05-28T08:19:18.417274Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m loop count: 1, num_transactions_completed: 76, all txs num: 105, SUBBLOCK_GAS_LIMIT: 8000000
+[2m2025-05-28T08:19:18.417288Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m num transactions left: 29
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+[2m2025-05-28T08:19:34.851221Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m successfully executed subblock: num_transactions_completed=76, upper=105
+[2m2025-05-28T08:19:34.851265Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m accumulating the logs bloom
+[2m2025-05-28T08:19:41.829289Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m successfully executed block: block_number=17106222, block_hash=0xe2947483136770b2eac272e558d2c3737d34794233c710c5f7f6ec77fc59940c, state_root=0xd7ae86d7d2cc75cc821531fdfc6c752c2402bcf88e164e7ac35cf0f2cd8dcd02
+[2m2025-05-28T08:19:41.829325Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m fetching 1 ancestor headers
+[2m2025-05-28T08:19:41.896780Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m Pruned state compression ratio: 0.863920018746837
+[2m2025-05-28T08:19:41.915805Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m Pruned state compression ratio: 0.5868737089312503
+[2m2025-05-28T08:20:06.383956Z[0m [32m INFO[0m [2msubblock[0m[2m:[0m Public values size in bytes: 1602855
+[2m2025-05-28T08:20:06.417107Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 0 pc = 0x200d04
+[2m2025-05-28T08:20:06.417198Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m ┌╴deserialize input
+[2m2025-05-28T08:20:06.519429Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m └╴1,959,080 cycles
+[2m2025-05-28T08:20:06.519487Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m ┌╴commit input
+[2m2025-05-28T08:20:07.071226Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m └╴7,111,345 cycles
+[2m2025-05-28T08:20:07.071264Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m ┌╴deserialize parent state
+[2m2025-05-28T08:20:07.131793Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 10000000 pc = 0x314ad0
+[2m2025-05-28T08:20:07.581467Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 20000000 pc = 0x200a3c
+[2m2025-05-28T08:20:08.043101Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m └╴20,216,742 cycles
+[2m2025-05-28T08:20:08.043141Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m ┌╴execute subblock
+[2m2025-05-28T08:20:08.043194Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ ┌╴compute input state root
+[2m2025-05-28T08:20:08.094893Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 30000000 pc = 0x21adfc
+[2m2025-05-28T08:20:08.628923Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ └╴9,461,435 cycles
+[2m2025-05-28T08:20:08.628955Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ ┌╴construct trie db
+[2m2025-05-28T08:20:08.797047Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 40000000 pc = 0x21a8ac
+[2m2025-05-28T08:20:08.975818Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ └╴3,829,872 cycles
+[2m2025-05-28T08:20:08.975847Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ ┌╴recover senders
+[2m2025-05-28T08:20:14.483974Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ └╴3,272,340 cycles
+[2m2025-05-28T08:20:14.484067Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ ┌╴execute
+[2m2025-05-28T08:20:14.654748Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 50000000 pc = 0x2c15fc
+[2m2025-05-28T08:20:15.063079Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 60000000 pc = 0x2ed314
+[2m2025-05-28T08:20:15.478289Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 70000000 pc = 0x200adc
+[2m2025-05-28T08:20:15.513492Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ ┌╴precompile-ecrecover
+[2m2025-05-28T08:20:15.600273Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ └╴39,055 cycles
+[2m2025-05-28T08:20:15.921142Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ ┌╴precompile-ecrecover
+[2m2025-05-28T08:20:16.004104Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ └╴39,299 cycles
+[2m2025-05-28T08:20:16.061977Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 80000000 pc = 0x327028
+[2m2025-05-28T08:20:16.088161Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ ┌╴precompile-ecrecover
+[2m2025-05-28T08:20:16.165885Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ └╴37,006 cycles
+[2m2025-05-28T08:20:16.549867Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 90000000 pc = 0x347f58
+[2m2025-05-28T08:20:16.956811Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 100000000 pc = 0x32b2dc
+[2m2025-05-28T08:20:17.052568Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ ┌╴precompile-ecrecover
+[2m2025-05-28T08:20:17.135856Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ └╴38,510 cycles
+[2m2025-05-28T08:20:17.415897Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ ┌╴precompile-ecrecover
+[2m2025-05-28T08:20:17.487197Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ └╴37,335 cycles
+[2m2025-05-28T08:20:17.523068Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 110000000 pc = 0x200a40
+[2m2025-05-28T08:20:17.622921Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ ┌╴precompile-ecrecover
+[2m2025-05-28T08:20:17.705710Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ └╴37,504 cycles
+[2m2025-05-28T08:20:17.883498Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ └╴70,946,271 cycles
+[2m2025-05-28T08:20:17.888343Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ ┌╴accrue logs bloom
+[2m2025-05-28T08:20:17.941531Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ └╴923,563 cycles
+[2m2025-05-28T08:20:17.941558Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ ┌╴finalize output
+[2m2025-05-28T08:20:18.060920Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 120000000 pc = 0x200a30
+[2m2025-05-28T08:20:18.688136Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 130000000 pc = 0x200918
+[2m2025-05-28T08:20:19.263498Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ └╴19,939,026 cycles
+[2m2025-05-28T08:20:19.264081Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m └╴108,474,854 cycles
+[2m2025-05-28T08:20:19.469138Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_prover[0m[2m:[0m gas: 216705809
+[2m2025-05-28T08:20:19.469713Z[0m [32m INFO[0m [2msubblock[0m[2m:[0m Subblock 0 instruction count: 139184520
+[2m2025-05-28T08:20:19.507281Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 0 pc = 0x200d04
+[2m2025-05-28T08:20:19.507372Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m ┌╴deserialize input
+[2m2025-05-28T08:20:19.536752Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m └╴640,974 cycles
+[2m2025-05-28T08:20:19.536776Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m ┌╴commit input
+[2m2025-05-28T08:20:19.710971Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m └╴2,275,968 cycles
+[2m2025-05-28T08:20:19.710998Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m ┌╴deserialize parent state
+[2m2025-05-28T08:20:20.022494Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 10000000 pc = 0x3082d8
+[2m2025-05-28T08:20:20.358021Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m └╴13,926,245 cycles
+[2m2025-05-28T08:20:20.358055Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m ┌╴execute subblock
+[2m2025-05-28T08:20:20.358123Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ ┌╴compute input state root
+[2m2025-05-28T08:20:20.575169Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 20000000 pc = 0x200a28
+[2m2025-05-28T08:20:20.599970Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ └╴3,615,722 cycles
+[2m2025-05-28T08:20:20.599995Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ ┌╴construct trie db
+[2m2025-05-28T08:20:20.756917Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ └╴1,201,009 cycles
+[2m2025-05-28T08:20:20.756958Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ ┌╴recover senders
+[2m2025-05-28T08:20:22.859905Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ └╴1,247,534 cycles
+[2m2025-05-28T08:20:22.859991Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ ┌╴execute
+[2m2025-05-28T08:20:22.884542Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ ┌╴precompile-ecrecover
+[2m2025-05-28T08:20:22.959964Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ └╴37,020 cycles
+[2m2025-05-28T08:20:23.088426Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ ┌╴precompile-ecrecover
+[2m2025-05-28T08:20:23.164056Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ └╴37,711 cycles
+[2m2025-05-28T08:20:23.238998Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ ┌╴precompile-ecrecover
+[2m2025-05-28T08:20:23.315748Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ └╴38,237 cycles
+[2m2025-05-28T08:20:23.379898Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 30000000 pc = 0x292c1c
+[2m2025-05-28T08:20:23.792172Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 40000000 pc = 0x200a40
+[2m2025-05-28T08:20:23.814111Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ ┌╴precompile-ecrecover
+[2m2025-05-28T08:20:23.888095Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ └╴38,853 cycles
+[2m2025-05-28T08:20:24.209024Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ ┌╴precompile-ecrecover
+[2m2025-05-28T08:20:24.298368Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ │ └╴39,182 cycles
+[2m2025-05-28T08:20:24.359893Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 50000000 pc = 0x386d28
+[2m2025-05-28T08:20:24.415240Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ └╴28,346,942 cycles
+[2m2025-05-28T08:20:24.417273Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ ┌╴accrue logs bloom
+[2m2025-05-28T08:20:24.437495Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ └╴364,122 cycles
+[2m2025-05-28T08:20:24.437519Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ ┌╴finalize output
+[2m2025-05-28T08:20:24.867775Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ └╴6,689,105 cycles
+[2m2025-05-28T08:20:24.868037Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m └╴41,508,787 cycles
+[2m2025-05-28T08:20:24.969354Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_prover[0m[2m:[0m gas: 90553163
+[2m2025-05-28T08:20:24.969570Z[0m [32m INFO[0m [2msubblock[0m[2m:[0m Subblock 1 instruction count: 59112773
+[2m2025-05-28T08:20:24.977544Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 0 pc = 0x200d04
+[2m2025-05-28T08:20:24.977607Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m ┌╴deserialize
+[2m2025-05-28T08:20:25.308422Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 10000000 pc = 0x23bd0c
+[2m2025-05-28T08:20:25.652801Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 20000000 pc = 0x23bce0
+[2m2025-05-28T08:20:25.918153Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ ┌╴deserialize aggregation input
+[2m2025-05-28T08:20:25.934337Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ └╴385,965 cycles
+[2m2025-05-28T08:20:25.989132Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m └╴29,241,311 cycles
+[2m2025-05-28T08:20:25.989221Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m ┌╴aggregate
+[2m2025-05-28T08:20:26.055455Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 30000000 pc = 0x2584a4
+[2m2025-05-28T08:20:26.518514Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ ┌╴deserialize subblock input
+[2m2025-05-28T08:20:26.638800Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ └╴2,500,601 cycles
+[2m2025-05-28T08:20:26.639080Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ ┌╴deserialize subblock output
+[2m2025-05-28T08:20:26.671299Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ └╴598,585 cycles
+[2m2025-05-28T08:20:26.671330Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ ┌╴extend state
+[2m2025-05-28T08:20:26.672903Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ └╴22,042 cycles
+[2m2025-05-28T08:20:26.708727Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::executor[0m[2m:[0m clk = 40000000 pc = 0x2584b8
+[2m2025-05-28T08:20:26.851557Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ ┌╴deserialize subblock input
+[2m2025-05-28T08:20:26.896779Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ └╴820,415 cycles
+[2m2025-05-28T08:20:26.897184Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ ┌╴deserialize subblock output
+[2m2025-05-28T08:20:26.910392Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ └╴235,111 cycles
+[2m2025-05-28T08:20:26.910419Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ ┌╴extend state
+[2m2025-05-28T08:20:26.912500Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m │ └╴29,420 cycles
+[2m2025-05-28T08:20:26.912569Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m └╴13,939,176 cycles
+[2m2025-05-28T08:20:26.912591Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m ┌╴verify block hashes
+[2m2025-05-28T08:20:26.913081Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m └╴7,704 cycles
+[2m2025-05-28T08:20:26.930969Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m ┌╴validate subblock aggregation
+[2m2025-05-28T08:20:27.083718Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_core_executor::syscalls::write[0m[2m:[0m └╴2,919,432 cycles
+[2m2025-05-28T08:20:27.144657Z[0m [32m INFO[0m [1mexecute[0m[2m:[0m [2msp1_prover[0m[2m:[0m gas: 91291960
+[2m2025-05-28T08:20:27.144742Z[0m [32m INFO[0m [2msubblock[0m[2m:[0m Aggregation program instruction count: 47455275
