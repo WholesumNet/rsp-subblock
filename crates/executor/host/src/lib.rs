@@ -382,9 +382,17 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
         let mut subblock_inputs = Vec::new();
         let mut subblock_outputs = Vec::new();
         let mut subblock_parent_states = Vec::new();
+        let mut loop_count = 0usize;
 
         loop {
             tracing::info!("executing subblock");
+            tracing::info!(
+                "loop count: {:?}, num_transactions_completed: {:?}, all txs num: {:?}",
+                loop_count,
+                num_transactions_completed as usize,
+                current_block.body.len()
+            );
+            loop_count += 1;
             let cache_db = CacheDB::new(&rpc_db);
 
             // Slice the block to only include the transactions that have not been executed yet.

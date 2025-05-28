@@ -1,0 +1,125 @@
+[2m2025-05-28T07:27:57.307079Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m fetching the current block and the previous block
+[2m2025-05-28T07:27:57.420696Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m setting up the spec for the block executor
+[2m2025-05-28T07:27:57.420714Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m setting up the database for the block executor
+[2m2025-05-28T07:27:57.420719Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m executing the block and with rpc db: block_number=17106222, transaction_count=105
+[2m2025-05-28T07:27:57.422343Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m executing subblock
+[2m2025-05-28T07:27:57.422370Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m loop count: 0, num_transactions_completed: 0, all txs num: 105
+[2m2025-05-28T07:27:57.422412Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m num transactions left: 105
+[2m2025-05-28T07:28:03.513774Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m successfully executed subblock: num_transactions_completed=0, upper=8
+[2m2025-05-28T07:28:03.513821Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m accumulating the logs bloom
+[2m2025-05-28T07:28:03.515427Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m executing subblock
+[2m2025-05-28T07:28:03.515444Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m loop count: 0, num_transactions_completed: 8, all txs num: 105
+[2m2025-05-28T07:28:03.515460Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m num transactions left: 97
+[2m2025-05-28T07:28:05.965546Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m successfully executed subblock: num_transactions_completed=8, upper=14
+[2m2025-05-28T07:28:05.965591Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m accumulating the logs bloom
+[2m2025-05-28T07:28:05.966483Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m executing subblock
+[2m2025-05-28T07:28:05.966504Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m loop count: 0, num_transactions_completed: 14, all txs num: 105
+[2m2025-05-28T07:28:05.966522Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m num transactions left: 91
+[2m2025-05-28T07:28:10.989387Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m successfully executed subblock: num_transactions_completed=14, upper=17
+[2m2025-05-28T07:28:10.989431Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m accumulating the logs bloom
+[2m2025-05-28T07:28:10.990931Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m executing subblock
+[2m2025-05-28T07:28:10.990948Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m loop count: 0, num_transactions_completed: 17, all txs num: 105
+[2m2025-05-28T07:28:10.990967Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m num transactions left: 88
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+[2m2025-05-28T07:28:16.832305Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m successfully executed subblock: num_transactions_completed=17, upper=24
+[2m2025-05-28T07:28:16.832323Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m accumulating the logs bloom
+[2m2025-05-28T07:28:16.832985Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m executing subblock
+[2m2025-05-28T07:28:16.833000Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m loop count: 0, num_transactions_completed: 24, all txs num: 105
+[2m2025-05-28T07:28:16.833022Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m num transactions left: 81
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+[2m2025-05-28T07:28:23.035447Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m successfully executed subblock: num_transactions_completed=24, upper=30
+[2m2025-05-28T07:28:23.035481Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m accumulating the logs bloom
+[2m2025-05-28T07:28:23.037047Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m executing subblock
+[2m2025-05-28T07:28:23.037072Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m loop count: 0, num_transactions_completed: 30, all txs num: 105
+[2m2025-05-28T07:28:23.037094Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m num transactions left: 75
+[2m2025-05-28T07:28:26.571104Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m successfully executed subblock: num_transactions_completed=30, upper=36
+[2m2025-05-28T07:28:26.571147Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m accumulating the logs bloom
+[2m2025-05-28T07:28:26.571758Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m executing subblock
+[2m2025-05-28T07:28:26.571773Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m loop count: 0, num_transactions_completed: 36, all txs num: 105
+[2m2025-05-28T07:28:26.571795Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m num transactions left: 69
+[2m2025-05-28T07:28:29.027358Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m successfully executed subblock: num_transactions_completed=36, upper=38
+[2m2025-05-28T07:28:29.027403Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m accumulating the logs bloom
+[2m2025-05-28T07:28:29.027736Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m executing subblock
+[2m2025-05-28T07:28:29.027752Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m loop count: 0, num_transactions_completed: 38, all txs num: 105
+[2m2025-05-28T07:28:29.027772Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m num transactions left: 67
+[2m2025-05-28T07:28:34.264794Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m successfully executed subblock: num_transactions_completed=38, upper=45
+[2m2025-05-28T07:28:34.264838Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m accumulating the logs bloom
+[2m2025-05-28T07:28:34.265926Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m executing subblock
+[2m2025-05-28T07:28:34.265939Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m loop count: 0, num_transactions_completed: 45, all txs num: 105
+[2m2025-05-28T07:28:34.265960Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m num transactions left: 60
+[2m2025-05-28T07:28:41.272801Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m successfully executed subblock: num_transactions_completed=45, upper=58
+[2m2025-05-28T07:28:41.272849Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m accumulating the logs bloom
+[2m2025-05-28T07:28:41.274061Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m executing subblock
+[2m2025-05-28T07:28:41.274079Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m loop count: 0, num_transactions_completed: 58, all txs num: 105
+[2m2025-05-28T07:28:41.274093Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m num transactions left: 47
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+[2m2025-05-28T07:28:47.341746Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m successfully executed subblock: num_transactions_completed=58, upper=66
+[2m2025-05-28T07:28:47.341790Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m accumulating the logs bloom
+[2m2025-05-28T07:28:47.342811Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m executing subblock
+[2m2025-05-28T07:28:47.342828Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m loop count: 0, num_transactions_completed: 66, all txs num: 105
+[2m2025-05-28T07:28:47.342849Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m num transactions left: 39
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+[2m2025-05-28T07:28:52.719783Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m successfully executed subblock: num_transactions_completed=66, upper=74
+[2m2025-05-28T07:28:52.719830Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m accumulating the logs bloom
+[2m2025-05-28T07:28:52.721189Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m executing subblock
+[2m2025-05-28T07:28:52.721219Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m loop count: 0, num_transactions_completed: 74, all txs num: 105
+[2m2025-05-28T07:28:52.721244Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m num transactions left: 31
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+[2m2025-05-28T07:28:57.265486Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m successfully executed subblock: num_transactions_completed=74, upper=78
+[2m2025-05-28T07:28:57.265532Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m accumulating the logs bloom
+[2m2025-05-28T07:28:57.266384Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m executing subblock
+[2m2025-05-28T07:28:57.266397Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m loop count: 0, num_transactions_completed: 78, all txs num: 105
+[2m2025-05-28T07:28:57.266411Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m num transactions left: 27
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+[2m2025-05-28T07:29:02.884595Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m successfully executed subblock: num_transactions_completed=78, upper=86
+[2m2025-05-28T07:29:02.884639Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m accumulating the logs bloom
+[2m2025-05-28T07:29:02.885641Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m executing subblock
+[2m2025-05-28T07:29:02.885655Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m loop count: 0, num_transactions_completed: 86, all txs num: 105
+[2m2025-05-28T07:29:02.885668Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m num transactions left: 19
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+[2m2025-05-28T07:29:07.017185Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m successfully executed subblock: num_transactions_completed=86, upper=91
+[2m2025-05-28T07:29:07.017264Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m accumulating the logs bloom
+[2m2025-05-28T07:29:07.018507Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m executing subblock
+[2m2025-05-28T07:29:07.018520Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m loop count: 0, num_transactions_completed: 91, all txs num: 105
+[2m2025-05-28T07:29:07.018532Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m num transactions left: 14
+[2m2025-05-28T07:29:11.552197Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m successfully executed subblock: num_transactions_completed=91, upper=102
+[2m2025-05-28T07:29:11.552277Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m accumulating the logs bloom
+[2m2025-05-28T07:29:11.553735Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m executing subblock
+[2m2025-05-28T07:29:11.553752Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m loop count: 0, num_transactions_completed: 102, all txs num: 105
+[2m2025-05-28T07:29:11.553769Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m num transactions left: 3
+cycle-tracker-report-start: precompile-ecrecover
+cycle-tracker-report-end: precompile-ecrecover
+[2m2025-05-28T07:29:14.479926Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m successfully executed subblock: num_transactions_completed=102, upper=105
+[2m2025-05-28T07:29:14.479968Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m accumulating the logs bloom
+[2m2025-05-28T07:29:20.289943Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m successfully executed block: block_number=17106222, block_hash=0xe2947483136770b2eac272e558d2c3737d34794233c710c5f7f6ec77fc59940c, state_root=0xd7ae86d7d2cc75cc821531fdfc6c752c2402bcf88e164e7ac35cf0f2cd8dcd02
+[2m2025-05-28T07:29:20.289977Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m fetching 1 ancestor headers
+[2m2025-05-28T07:29:20.343445Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m Pruned state compression ratio: 0.5465169020195516
+[2m2025-05-28T07:29:20.357415Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m Pruned state compression ratio: 0.5302826724078517
+[2m2025-05-28T07:29:20.369259Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m Pruned state compression ratio: 0.5153112293287738
+[2m2025-05-28T07:29:20.379808Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m Pruned state compression ratio: 0.5439101144242854
+[2m2025-05-28T07:29:20.393499Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m Pruned state compression ratio: 0.4929490240945518
+[2m2025-05-28T07:29:20.403768Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m Pruned state compression ratio: 0.5304988951410474
+[2m2025-05-28T07:29:20.415409Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m Pruned state compression ratio: 0.5885915939095882
+[2m2025-05-28T07:29:20.430580Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m Pruned state compression ratio: 0.500565931327545
+[2m2025-05-28T07:29:20.441621Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m Pruned state compression ratio: 0.5367469007039074
+[2m2025-05-28T07:29:20.455799Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m Pruned state compression ratio: 0.5279697487645906
+[2m2025-05-28T07:29:20.468033Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m Pruned state compression ratio: 0.5244264449081879
+[2m2025-05-28T07:29:20.480238Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m Pruned state compression ratio: 0.5329766683474013
+[2m2025-05-28T07:29:20.492324Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m Pruned state compression ratio: 0.5481591343601854
+[2m2025-05-28T07:29:20.504520Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m Pruned state compression ratio: 0.4934707035698112
+[2m2025-05-28T07:29:20.516623Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m Pruned state compression ratio: 0.5261723584344427
+[2m2025-05-28T07:29:20.528377Z[0m [32m INFO[0m [2mrsp_host_executor[0m[2m:[0m Pruned state compression ratio: 0.4959215418468776
+[2m2025-05-28T07:30:16.959036Z[0m [32m INFO[0m [2msubblock[0m[2m:[0m Public values size in bytes: 2226355
