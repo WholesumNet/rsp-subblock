@@ -10,7 +10,7 @@ use rsp_host_executor::HostExecutor;
 use sp1_sdk::{
     include_elf, HashableKey, Prover, ProverClient, SP1ProvingKey, SP1Stdin, SP1VerifyingKey,
 };
-use std::path::PathBuf;
+use std::{path::PathBuf, time::Instant};
 use tracing_subscriber::{
     filter::EnvFilter, fmt, prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt,
 };
@@ -162,21 +162,46 @@ async fn schedule_subblock_execution(
         }
 
         if execute {
+            let start = Instant::now();
+
             let (_public_values, report) = client.execute(&subblock_elf, &stdin).run().unwrap();
+
+            let elapsed = start.elapsed().as_secs_f64();
             let subblock_instruction_count = report.total_instruction_count();
-            tracing::info!("Subblock {} instruction count: {}", i, subblock_instruction_count);
+            let hz = subblock_instruction_count as f64 / elapsed;
+            let mhz = hz / 1_000_000.0;
+
+            tracing::info!(
+                "Subblock {}: {} instructions in {:.3} s → {:.3} MHz",
+                i,
+                subblock_instruction_count,
+                elapsed,
+                mhz
+            );
         }
     }
 
     if execute {
+        let start = Instant::now();
         // Execute the aggregation program with deferred proof verification off, since we don't have the proof yet.
         let (_public_values, report) = client
             .execute(&agg_elf, &aggregation_stdin)
             .deferred_proof_verification(false)
             .run()
             .unwrap();
+        let elapsed = start.elapsed().as_secs_f64();
+
         let agg_instruction_count = report.total_instruction_count();
-        tracing::info!("Aggregation program instruction count: {}", agg_instruction_count);
+        let hz = agg_instruction_count as f64 / elapsed;
+        let mhz = hz / 1_000_000.0;
+
+        tracing::info!(
+            "Aggregator: {} cycles/instructions in {:.3} s → {:.3} MHz",
+            agg_instruction_count,
+            elapsed,
+            mhz
+        );
+        // tracing::info!("Aggregation program instruction count: {}", agg_instruction_count);
     }
 
     Ok(())
