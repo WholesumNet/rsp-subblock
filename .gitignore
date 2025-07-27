@@ -25,3 +25,7 @@ elf
 **.csv
 
 input/
+
+.idea/
+/dump_dir/
+/logs/
