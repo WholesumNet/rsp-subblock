@@ -59,7 +59,7 @@ async fn main() -> eyre::Result<()> {
         args.block_number,
     )?;
 
-    let t_prepare_sb_stdin = Instant::now();
+    let t_client_input = Instant::now();
 
     let client_input = match (cache_data, provider_config.rpc_url) {
         (Some(cache_data), _) => cache_data,
@@ -72,10 +72,13 @@ async fn main() -> eyre::Result<()> {
             let host_executor = HostExecutor::new(provider);
 
             // Execute the host.
+            let t_prepare_sb_stdin = Instant::now();
             let cache_data = host_executor
                 .execute_subblock(args.block_number, ChainVariant::Ethereum)
                 .await
                 .expect("failed to execute host");
+
+            println!("TIMER_ALL preprocess subblocks stdin: {:.3?}", t_prepare_sb_stdin.elapsed());
 
             if let Some(ref cache_dir) = args.cache_dir {
                 let input_folder = cache_dir.join(format!("input/{}", provider_config.chain_id));
@@ -95,7 +98,7 @@ async fn main() -> eyre::Result<()> {
             eyre::bail!("cache not found and RPC URL not provided")
         }
     };
-    println!("TIMER_ALL preprocess subblocks stdin: {:.3?}", t_prepare_sb_stdin.elapsed());
+    println!("TIMER_ALL t_client_input: {:.3?}", t_client_input.elapsed());
 
     // Generate the proof.
     let client =
