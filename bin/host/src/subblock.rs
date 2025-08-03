@@ -59,6 +59,8 @@ async fn main() -> eyre::Result<()> {
         args.block_number,
     )?;
 
+    let t_prepare_sb_stdin = Instant::now();
+
     let client_input = match (cache_data, provider_config.rpc_url) {
         (Some(cache_data), _) => cache_data,
         (None, Some(rpc_url)) => {
@@ -93,6 +95,7 @@ async fn main() -> eyre::Result<()> {
             eyre::bail!("cache not found and RPC URL not provided")
         }
     };
+    println!("TIMER_ALL preprocess subblocks stdin: {:.3?}", t_prepare_sb_stdin.elapsed());
 
     // Generate the proof.
     let client =

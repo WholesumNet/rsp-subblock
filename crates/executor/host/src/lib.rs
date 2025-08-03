@@ -7,7 +7,7 @@ use std::{
     sync::Arc,
     time::Duration,
 };
-
+use std::time::Instant;
 use alloy_provider::{network::AnyNetwork, Provider};
 use alloy_transport::Transport;
 use itertools::Itertools;
@@ -319,6 +319,7 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
     where
         V: Variant,
     {
+        let t = Instant::now();
         // Fetch the current block and the previous block from the provider.
         tracing::info!("fetching the current block and the previous block");
         let current_block = self
@@ -334,6 +335,9 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
             .await?
             .ok_or(HostError::ExpectedBlock(block_number))
             .map(|block| Block::try_from(block.inner))??;
+
+        println!("TIMER fetch current & parent block:  {:.3?}", t.elapsed());
+        let t = Instant::now();
 
         let total_transactions = current_block.body.len() as u64;
 
@@ -356,6 +360,9 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
         let executor_block_input = V::pre_process_block(&current_block)
             .with_recovered_senders()
             .ok_or(HostError::FailedToRecoverSenders)?;
+
+        println!("TIMER preprocess block & create RpcDb: {:.3?}", t.elapsed());
+        let t = Instant::now();
 
         let executor_difficulty = current_block.header.difficulty;
 
@@ -384,7 +391,10 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
         let mut subblock_parent_states = Vec::new();
         let mut loop_count = 0usize;
 
+        println!("TIMER init vectors: {:.3?}", t.elapsed());
+
         loop {
+            let t_slice = Instant::now();
             tracing::info!("executing subblock");
             tracing::info!(
                 "loop count: {:?}, num_transactions_completed: {:?}, all txs num: {:?}, SUBBLOCK_GAS_LIMIT: {}",
@@ -415,10 +425,14 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
             let starting_gas_used = cumulative_gas_used;
 
             tracing::info!("num transactions left: {}", subblock_input.body.len());
+            println!("TIMER prepare subblock_input slice:  {:.3?}", t_slice.elapsed());
+            let t_exec = Instant::now();
 
             // Execute the subblock.
             let subblock_output = V::execute(&subblock_input, executor_difficulty, cache_db)?;
+            println!("TIMER execute VM (subblock {})   {:.3?}", loop_count - 1, t_exec.elapsed());
 
+            let t_post = Instant::now();
             let num_executed_transactions = subblock_output.receipts.len();
             let upper = num_transactions_completed + num_executed_transactions as u64;
             let is_last_subblock = upper == current_block.body.len() as u64;
@@ -499,11 +513,13 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
 
             subblock_inputs.push(subblock_input);
 
+            println!("TIMER post-process (subblock {}): ️  {:.3?}", loop_count - 1, t_post.elapsed());
             if num_transactions_completed >= current_block.body.len() as u64 {
                 break;
             }
         }
 
+        let t_storage_proof = Instant::now();
         // Build parent state from modified keys and used keys from this subblock
         let mut before_storage_proofs = Vec::new();
         let mut after_storage_proofs = Vec::new();
@@ -548,6 +564,10 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
             after_storage_proofs.extend(after_handles.join_all().await);
         }
 
+        println!("TIMER join before & after storage proofs (get from provider):  {:.3?}", t_storage_proof.elapsed());
+
+
+        let t_state = Instant::now();
         let parent_state = EthereumState::from_transition_proofs(
             previous_block.state_root,
             &before_storage_proofs.iter().map(|item| (item.address, item.clone())).collect(),
@@ -565,6 +585,8 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
         if state_root != current_block.state_root {
             return Err(HostError::StateRootMismatch(state_root, current_block.state_root));
         }
+        println!("TIMER update parent_state:  {:.3?}", t_state.elapsed());
+        let t_header = Instant::now();
 
         // Derive the block header.
         //
@@ -597,6 +619,8 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
             header.hash_slow(),
             current_block.state_root
         );
+        println!("TIMER build+hash header  {:.3?}", t_header.elapsed());
+        let t_anc = Instant::now();
 
         // Fetch the parent headers needed to constrain the BLOCKHASH opcode.
         let oldest_ancestor = *rpc_db.oldest_ancestor.borrow();
@@ -619,6 +643,12 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
             ancestor_headers,
             bytecodes: rpc_db.get_bytecodes(),
         };
+
+        println!(
+            "TIMER fetch all ancestor headers {:.3?}",
+            t_anc.elapsed()
+        );
+        let t_prune = Instant::now();
 
         let mut big_state = parent_state.clone();
         for i in 0..subblock_inputs.len() {
@@ -684,6 +714,8 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
             let subblock_input = &mut subblock_inputs[i];
             subblock_input.block_hashes = block_hashes.clone();
         }
+
+        println!("TIMER prune all subblocks    {:.3?}", t_prune.elapsed());
 
         let all_subblock_outputs = SubblockHostOutput {
             subblock_inputs,
