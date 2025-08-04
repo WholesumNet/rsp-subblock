@@ -42,6 +42,8 @@ struct HostArgs {
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
+    let t_start = Instant::now();
+    let t_client_input = Instant::now();
     // Intialize the environment variables.
     dotenv::dotenv().ok();
 
@@ -59,7 +61,6 @@ async fn main() -> eyre::Result<()> {
         args.block_number,
     )?;
 
-    let t_client_input = Instant::now();
 
     let client_input = match (cache_data, provider_config.rpc_url) {
         (Some(cache_data), _) => cache_data,
@@ -100,6 +101,7 @@ async fn main() -> eyre::Result<()> {
     };
     println!("TIMER_ALL t_client_input: {:.3?}", t_client_input.elapsed());
 
+    let t_post_client_input = Instant::now();
     // Generate the proof.
     let client =
         tokio::task::spawn_blocking(|| ProverClient::builder().cpu().build()).await.unwrap();
@@ -119,6 +121,10 @@ async fn main() -> eyre::Result<()> {
     )
     .await?;
 
+    println!("TIMER_ALL t_post_client_input: {:.3?}", t_post_client_input.elapsed());
+
+    println!("TIMER_ALL entire main fn: {:.3?}", t_start.elapsed());
+
     Ok(())
 }
 
@@ -130,6 +136,7 @@ async fn schedule_subblock_execution(
     execute: bool,
     dump_dir: Option<PathBuf>,
 ) -> eyre::Result<()> {
+    let t_dump = Instant::now();
     let (subblock_elf, subblock_vk) = (subblock_pk.elf, subblock_pk.vk);
     let agg_elf = agg_pk.elf;
 
@@ -150,6 +157,10 @@ async fn schedule_subblock_execution(
         let stdin_path = dump_dir.join("agg_stdin.bin");
         std::fs::write(stdin_path, bincode::serialize(&aggregation_stdin)?)?;
     }
+
+    println!("TIMER aggregator stdin & dump_dir in schedule_subblock_execution: {:.3?}", t_dump.elapsed());
+
+    let t = Instant::now();
 
     for i in 0..inputs.subblock_inputs.len() {
         let input = &inputs.subblock_inputs[i];
@@ -209,6 +220,7 @@ async fn schedule_subblock_execution(
         );
         // tracing::info!("Aggregation program instruction count: {}", agg_instruction_count);
     }
+    println!("TIMER execute subblocks and aggregator: {:?}", t.elapsed());
 
     Ok(())
 }
