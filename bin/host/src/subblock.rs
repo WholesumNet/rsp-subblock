@@ -81,6 +81,8 @@ async fn main() -> eyre::Result<()> {
 
             println!("TIMER_ALL preprocess subblocks stdin: {:.3?}", t_prepare_sb_stdin.elapsed());
 
+            let t_write_to_cache = Instant::now();
+
             if let Some(ref cache_dir) = args.cache_dir {
                 let input_folder = cache_dir.join(format!("input/{}", provider_config.chain_id));
                 if !input_folder.exists() {
@@ -92,6 +94,8 @@ async fn main() -> eyre::Result<()> {
 
                 bincode::serialize_into(&mut cache_file, &cache_data)?;
             }
+
+            println!("write_to_cache time: {:?}", t_write_to_cache.elapsed());
 
             cache_data
         }
