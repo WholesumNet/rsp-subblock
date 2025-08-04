@@ -102,6 +102,7 @@ async fn main() -> eyre::Result<()> {
     println!("TIMER_ALL t_client_input: {:.3?}", t_client_input.elapsed());
 
     let t_post_client_input = Instant::now();
+    let t_setup_client = Instant::now();
     // Generate the proof.
     let client =
         tokio::task::spawn_blocking(|| ProverClient::builder().cpu().build()).await.unwrap();
@@ -110,6 +111,8 @@ async fn main() -> eyre::Result<()> {
     let (subblock_pk, _subblock_vk) = client.setup(include_elf!("rsp-client-eth-subblock"));
 
     let (agg_pk, _agg_vk) = client.setup(include_elf!("rsp-client-eth-agg"));
+
+    println!("TIMER_ALL t_setup_client: {:.3?}", t_setup_client.elapsed());
 
     schedule_subblock_execution(
         subblock_pk,
@@ -152,7 +155,9 @@ async fn schedule_subblock_execution(
     let client =
         tokio::task::spawn_blocking(|| ProverClient::builder().cpu().build()).await.unwrap();
 
+    let t_agg_stdin = Instant::now();
     let aggregation_stdin = to_aggregation_stdin(inputs.clone(), &subblock_vk);
+    println!("TIMER aggregator stdin: {:?}", t_agg_stdin.elapsed());
     if let Some(dump_dir) = dump_dir.as_ref() {
         let stdin_path = dump_dir.join("agg_stdin.bin");
         std::fs::write(stdin_path, bincode::serialize(&aggregation_stdin)?)?;
