@@ -19,7 +19,7 @@ latest_proof.json
 # Env
 .env
 
-# SP1 ELF files
+# ELF files
 elf
 
 **.csv
