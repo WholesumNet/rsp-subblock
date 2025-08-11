@@ -7,9 +7,7 @@ use alloy_provider::ReqwestProvider;
 use clap::Parser;
 use rsp_client_executor::{io::SubblockHostOutput, ChainVariant};
 use rsp_host_executor::HostExecutor;
-use sp1_sdk::{
-    include_elf, HashableKey, Prover, ProverClient, SP1ProvingKey, SP1Stdin, SP1VerifyingKey,
-};
+use pico_sdk::{client::DefaultProverClient, HashableKey, init_logger, load_elf};
 use std::{path::PathBuf, time::Instant};
 use tracing_subscriber::{
     filter::EnvFilter, fmt, prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt,
@@ -108,20 +106,17 @@ async fn main() -> eyre::Result<()> {
     let t_post_client_input = Instant::now();
     let t_setup_client = Instant::now();
     // Generate the proof.
-    let client =
-        tokio::task::spawn_blocking(|| ProverClient::builder().cpu().build()).await.unwrap();
-
-    // Setup the proving key and verification key.
-    let (subblock_pk, _subblock_vk) = client.setup(include_elf!("rsp-client-eth-subblock"));
-
-    let (agg_pk, _agg_vk) = client.setup(include_elf!("rsp-client-eth-agg"));
+    let subblock_elf = load_elf("../../client-eth-subblock/elf/riscv32im-pico-zkvm-elf");
+    let subblock_client = DefaultProverClient::new(&subblock_elf);
+    let agg_elf = load_elf("../../client-eth-agg/elf/riscv32im-pico-zkvm-elf");
+    let agg_client = DefaultProverClient::new(&agg_elf);
 
     println!("TIMER_ALL t_setup_client: {:.3?}", t_setup_client.elapsed());
 
     schedule_subblock_execution(
-        subblock_pk,
+        subblock_client,
         args.block_number,
-        agg_pk,
+        agg_client,
         client_input,
         args.execute,
         args.dump_dir,
@@ -136,36 +131,32 @@ async fn main() -> eyre::Result<()> {
 }
 
 async fn schedule_subblock_execution(
-    subblock_pk: SP1ProvingKey,
+    subblock_client: DefaultProverClient,
     block_number: u64,
-    agg_pk: SP1ProvingKey,
+    agg_client: DefaultProverClient,
     inputs: SubblockHostOutput,
     execute: bool,
     dump_dir: Option<PathBuf>,
 ) -> eyre::Result<()> {
     let t_dump = Instant::now();
-    let (subblock_elf, subblock_vk) = (subblock_pk.elf, subblock_pk.vk);
-    let agg_elf = agg_pk.elf;
+    // let (subblock_elf, subblock_vk) = (subblock_pk.elf, subblock_pk.vk);
+    // let agg_elf = agg_pk.elf;
+    //
+    // let dump_dir = dump_dir.map(|d| d.join(format!("{}", block_number)));
+    //
+    // if let Some(dump_dir) = dump_dir.as_ref() {
+    //     std::fs::create_dir_all(dump_dir)?;
+    //     std::fs::write(dump_dir.join("subblock_elf.bin"), &subblock_elf)?;
+    //     std::fs::write(dump_dir.join("subblock_vk.bin"), bincode::serialize(&subblock_vk)?)?;
+    //     std::fs::write(dump_dir.join("agg_elf.bin"), &agg_elf)?;
+    // }
 
-    let dump_dir = dump_dir.map(|d| d.join(format!("{}", block_number)));
-
-    if let Some(dump_dir) = dump_dir.as_ref() {
-        std::fs::create_dir_all(dump_dir)?;
-        std::fs::write(dump_dir.join("subblock_elf.bin"), &subblock_elf)?;
-        std::fs::write(dump_dir.join("subblock_vk.bin"), bincode::serialize(&subblock_vk)?)?;
-        std::fs::write(dump_dir.join("agg_elf.bin"), &agg_elf)?;
-    }
-
-    let client =
-        tokio::task::spawn_blocking(|| ProverClient::builder().cpu().build()).await.unwrap();
-
-    let t_agg_stdin = Instant::now();
-    let aggregation_stdin = to_aggregation_stdin(inputs.clone(), &subblock_vk);
-    println!("TIMER aggregator stdin: {:?}", t_agg_stdin.elapsed());
-    if let Some(dump_dir) = dump_dir.as_ref() {
-        let stdin_path = dump_dir.join("agg_stdin.bin");
-        std::fs::write(stdin_path, bincode::serialize(&aggregation_stdin)?)?;
-    }
+    // let client =
+    //     tokio::task::spawn_blocking(|| ProverClient::builder().cpu().build()).await.unwrap();
+    // if let Some(dump_dir) = dump_dir.as_ref() {
+    //     let stdin_path = dump_dir.join("agg_stdin.bin");
+    //     std::fs::write(stdin_path, bincode::serialize(&aggregation_stdin)?)?;
+    // }
 
     println!("TIMER aggregator stdin & dump_dir in schedule_subblock_execution: {:.3?}", t_dump.elapsed());
 
@@ -175,25 +166,25 @@ async fn schedule_subblock_execution(
         let input = &inputs.subblock_inputs[i];
         let parent_state = &inputs.subblock_parent_states[i];
 
-        let mut stdin = SP1Stdin::new();
-        stdin.write(input);
-        stdin.write_vec(parent_state.clone());
+        let mut stdin_builder = subblock_client.new_stdin_builder();
+        stdin_builder.write(input);
+        stdin_builder.write_slice(parent_state);
 
         // Save the elf/stdin pair to the dump directory.
         if let Some(dump_dir) = dump_dir.as_ref() {
             let stdin_dir_path = dump_dir.join("subblock_stdins");
             std::fs::create_dir_all(&stdin_dir_path)?;
             let stdin_path = stdin_dir_path.join(format!("{}.bin", i));
-            std::fs::write(stdin_path, bincode::serialize(&stdin)?)?;
+            std::fs::write(stdin_path, bincode::serialize(&stdin_builder)?)?;
         }
 
         if execute {
             let start = Instant::now();
 
-            let (_public_values, report) = client.execute(&subblock_elf, &stdin).run().unwrap();
+            let (cycles, _pv_stream) = subblock_client.emulate(stdin_builder);
 
             let elapsed = start.elapsed().as_secs_f64();
-            let subblock_instruction_count = report.total_instruction_count();
+            let subblock_instruction_count = cycles;
             let hz = subblock_instruction_count as f64 / elapsed;
             let mhz = hz / 1_000_000.0;
 
@@ -207,40 +198,12 @@ async fn schedule_subblock_execution(
         }
     }
 
-    if execute {
-        let start = Instant::now();
-        // Execute the aggregation program with deferred proof verification off, since we don't have the proof yet.
-        let (_public_values, report) = client
-            .execute(&agg_elf, &aggregation_stdin)
-            .deferred_proof_verification(false)
-            .run()
-            .unwrap();
-        let elapsed = start.elapsed().as_secs_f64();
+    let t_agg_stdin = Instant::now();
+    // let aggregation_stdin = to_aggregation_stdin(inputs.clone(), &subblock_client.riscv_vk());
 
-        let agg_instruction_count = report.total_instruction_count();
-        let hz = agg_instruction_count as f64 / elapsed;
-        let mhz = hz / 1_000_000.0;
+    let mut stdin_builder = agg_client.new_stdin_builder();
 
-        tracing::info!(
-            "Aggregator: {} cycles/instructions in {:.3} s → {:.3} MHz",
-            agg_instruction_count,
-            elapsed,
-            mhz
-        );
-        // tracing::info!("Aggregation program instruction count: {}", agg_instruction_count);
-    }
-    println!("TIMER execute subblocks and aggregator: {:?}", t.elapsed());
-
-    Ok(())
-}
-
-/// Constructs the aggregation stdin, minus the subblock proofs.
-pub fn to_aggregation_stdin(
-    subblock_host_output: SubblockHostOutput,
-    subblock_vk: &SP1VerifyingKey,
-) -> SP1Stdin {
-    let mut stdin = SP1Stdin::new();
-
+    let subblock_host_output = inputs;
     assert_eq!(
         subblock_host_output.subblock_inputs.len(),
         subblock_host_output.subblock_outputs.len()
@@ -254,7 +217,7 @@ pub fn to_aggregation_stdin(
             &mut current_public_values,
             &subblock_host_output.subblock_outputs[i],
         )
-        .unwrap();
+            .unwrap();
         public_values.push(current_public_values);
     }
 
@@ -271,12 +234,80 @@ pub fn to_aggregation_stdin(
     //     rkyv::from_bytes::<EthereumState, rkyv::rancor::BoxedError>(&aligned_vec).unwrap();
     // let parent_state_root = parent_state.state_root();
 
-    stdin.write::<Vec<Vec<u8>>>(&public_values);
-    stdin.write::<[u32; 8]>(&subblock_vk.hash_u32());
-    stdin.write(&subblock_host_output.agg_input);
-    stdin.write(&subblock_host_output.agg_input.parent_header().state_root);
-    stdin
+    stdin_builder.write::<Vec<Vec<u8>>>(&public_values);
+    stdin_builder.write::<[u32; 8]>(&subblock_client.riscv_vk().hash_u32());
+    stdin_builder.write(&subblock_host_output.agg_input);
+    stdin_builder.write(&subblock_host_output.agg_input.parent_header().state_root);
+    println!("TIMER aggregator stdin: {:?}", t_agg_stdin.elapsed());
+
+    if execute {
+        let start = Instant::now();
+        // Execute the aggregation program with deferred proof verification off, since we don't have the proof yet.
+        let (cycles, _pv_stream) = agg_client
+            .emulate(stdin_builder);
+        let elapsed = start.elapsed().as_secs_f64();
+
+        let agg_instruction_count = cycles;
+        let hz = agg_instruction_count as f64 / elapsed;
+        let mhz = hz / 1_000_000.0;
+
+        tracing::info!(
+            "Aggregator: {} cycles/instructions in {:.3} s → {:.3} MHz",
+            agg_instruction_count,
+            elapsed,
+            mhz
+        );
+        // tracing::info!("Aggregation program instruction count: {}", agg_instruction_count);
+    }
+    println!("TIMER execute subblocks and aggregator: {:?}", t.elapsed());
+
+    Ok(())
 }
+//
+// /// Constructs the aggregation stdin, minus the subblock proofs.
+// pub fn to_aggregation_stdin(
+//     subblock_host_output: SubblockHostOutput,
+//     subblock_client: &DefaultProverClient,
+//     agg_client: &DefaultProverClient,
+// ) -> EmulatorStdinBuilder<Vec<u8>> {
+//     let mut stdin_builder = agg_client.new_stdin_builder();
+//
+//     assert_eq!(
+//         subblock_host_output.subblock_inputs.len(),
+//         subblock_host_output.subblock_outputs.len()
+//     );
+//     let mut public_values = Vec::new();
+//     for i in 0..subblock_host_output.subblock_inputs.len() {
+//         let mut current_public_values = Vec::new();
+//         let input = &subblock_host_output.subblock_inputs[i];
+//         bincode::serialize_into(&mut current_public_values, input).unwrap();
+//         bincode::serialize_into(
+//             &mut current_public_values,
+//             &subblock_host_output.subblock_outputs[i],
+//         )
+//         .unwrap();
+//         public_values.push(current_public_values);
+//     }
+//
+//     tracing::info!(
+//         "Public values size in bytes: {}",
+//         public_values.iter().map(|v| v.len()).sum::<usize>()
+//     );
+//
+//     // // Deserialize the parent state and compute the root.
+//     // let mut aligned_vec = AlignedVec::<16>::new();
+//     // let mut reader = Cursor::new(&subblock_host_output.agg_parent_state);
+//     // aligned_vec.extend_from_reader(&mut reader).unwrap();
+//     // let parent_state =
+//     //     rkyv::from_bytes::<EthereumState, rkyv::rancor::BoxedError>(&aligned_vec).unwrap();
+//     // let parent_state_root = parent_state.state_root();
+//
+//     stdin_builder.write::<Vec<Vec<u8>>>(&public_values);
+//     stdin_builder.write::<[u32; 8]>(&subblock_client.riscv_vk().hash_u32());
+//     stdin_builder.write(&subblock_host_output.agg_input);
+//     stdin_builder.write(&subblock_host_output.agg_input.parent_header().state_root);
+//     stdin_builder
+// }
 
 fn try_load_input_from_cache(
     cache_dir: Option<&PathBuf>,

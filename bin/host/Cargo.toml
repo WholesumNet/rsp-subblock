@@ -25,12 +25,8 @@ rsp-mpt.workspace = true
 # alloy
 alloy-provider.workspace = true
 
-# sp1
-sp1-sdk = { version = "4.1.7" }
-
-[build-dependencies]
-sp1-build = { version = "4.1.7" }
-
+# pico
+pico-sdk = { workspace = true }
 
 [[bin]]
 name = "subblock"
@@ -39,4 +35,3 @@ path = "src/subblock.rs"
 [features]
 default = []
 s3 = []
-cuda = ["sp1-sdk/cuda"]

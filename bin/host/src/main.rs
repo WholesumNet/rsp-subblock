@@ -2,7 +2,7 @@ use alloy_provider::ReqwestProvider;
 use clap::Parser;
 use rsp_client_executor::{io::ClientExecutorInput, ChainVariant, CHAIN_ID_ETH_MAINNET};
 use rsp_host_executor::HostExecutor;
-use sp1_sdk::{include_elf, Prover, ProverClient, SP1Stdin};
+use pico_sdk::{client::DefaultProverClient, init_logger, load_elf};
 use std::path::PathBuf;
 use tracing_subscriber::{
     filter::EnvFilter, fmt, prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt,
@@ -95,30 +95,26 @@ async fn main() -> eyre::Result<()> {
     };
 
     // Generate the proof.
-    let client =
-        tokio::task::spawn_blocking(|| ProverClient::builder().cpu().build()).await.unwrap();
-
-    // Setup the proving key and verification key.
-    let (pk, _vk) = client.setup(match variant {
-        ChainVariant::Ethereum => include_elf!("rsp-client-eth"),
-    });
+    let elf = load_elf("../../client-eth/elf/riscv32im-pico-zkvm-elf");
+    let client = DefaultProverClient::new(&elf);
 
     // Execute the block inside the zkVM.
-    let mut stdin = SP1Stdin::new();
+    let mut stdin_builder = client.new_stdin_builder();
     let buffer = bincode::serialize(&client_input).unwrap();
-    stdin.write_vec(buffer);
+    stdin_builder.write_slice(&buffer);
 
     // Only execute the program.
-    let (_public_values, execution_report) = client.execute(&pk.elf, &stdin).run().unwrap();
+    let (cycles, pv_stream) = client.emulate(stdin_builder.clone());
+    // let (_public_values, execution_report) = client.execute(&pk.elf, &stdin).run().unwrap();
 
-    println!("execution_report: {}", execution_report);
+    println!("rsp cycles: {}", cycles);
 
     if let Some(dump_dir) = args.dump_dir {
         let dump_dir = dump_dir.join(format!("{}", args.block_number));
         let elf_path = dump_dir.join("basic_elf.bin");
         let stdin_path = dump_dir.join("basic_stdin.bin");
-        std::fs::write(elf_path, &pk.elf)?;
-        std::fs::write(stdin_path, bincode::serialize(&stdin)?)?;
+        std::fs::write(elf_path, &elf)?;
+        std::fs::write(stdin_path, bincode::serialize(&stdin_builder)?)?;
     }
 
     Ok(())
