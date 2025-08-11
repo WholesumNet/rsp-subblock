@@ -28,6 +28,10 @@ exclude = ["**/target"]
 version = "0.1.0"
 
 [workspace.dependencies]
+#pico
+pico-sdk = { git = "ssh://git@github.com/brevis-network/brevis-vm.git", branch = "feat-defer-proof", package = "pico-sdk" }
+pico-patch-libs = { git = "ssh://git@github.com/brevis-network/brevis-vm.git", branch = "feat-defer-proof", package = "pico-patch-libs" }
+
 tracing = { version = "0.1.40", default-features = false }
 cfg-if = "1.0.0"
 spin = { version = "0.9.8", features = ["mutex"] }

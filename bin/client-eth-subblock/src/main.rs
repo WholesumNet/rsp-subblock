@@ -1,5 +1,5 @@
 #![no_main]
-sp1_zkvm::entrypoint!(main);
+pico_sdk::entrypoint!(main);
 
 use rsp_client_executor::{
     io::{read_aligned_vec, SubblockInput},
@@ -10,11 +10,11 @@ use rsp_mpt::EthereumState;
 pub fn main() {
     // Read the input.
     println!("cycle-tracker-start: deserialize input");
-    let input = sp1_zkvm::io::read::<SubblockInput>();
+    let input = pico_sdk::io::read_as::<SubblockInput>();
     println!("cycle-tracker-end: deserialize input");
 
     println!("cycle-tracker-start: commit input");
-    sp1_zkvm::io::commit(&input);
+    pico_sdk::io::commit(&input);
     println!("cycle-tracker-end: commit input");
 
     println!("cycle-tracker-start: deserialize parent state");
@@ -34,5 +34,5 @@ pub fn main() {
     println!("cycle-tracker-end: execute subblock");
 
     // Commit the state diff.
-    sp1_zkvm::io::commit(&subblock_output);
+    pico_sdk::io::commit(&subblock_output);
 }

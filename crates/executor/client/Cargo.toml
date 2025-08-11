@@ -44,7 +44,8 @@ revm-primitives.workspace = true
 alloy-primitives.workspace = true
 alloy-rlp.workspace = true
 
-# sp1
-sp1-zkvm = { version = "4.1.7", features = ["verify"] }
+# pico
+pico-sdk.workspace = true
+pico-patch-libs.workspace = true
 
 [dev-dependencies]

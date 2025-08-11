@@ -12,8 +12,8 @@ lto = "fat"
 rsp-client-executor = { path = "../../crates/executor/client" }
 rsp-mpt = { path = "../../crates/mpt" }
 
-# sp1
-sp1-zkvm = { version = "4.1.7" }
+# pico
+pico-sdk = { git = "ssh://git@github.com/brevis-network/brevis-vm.git", branch = "feat-defer-proof" }
 
 # rkyv
 rkyv = "0.8.10"
@@ -24,8 +24,11 @@ tracing = { version = "0.1", features = ["max_level_off", "release_max_level_off
 
 [patch.crates-io]
 # Precompile patches
-sha2 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", tag = "patch-sha2-0.10.8-sp1-4.0.0", package = "sha2" }
-bn = { git = "https://github.com/sp1-patches/bn", tag = "patch-0.6.0-sp1-4.0.0", package = "substrate-bn" }
-sha3 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", tag = "patch-sha3-0.10.8-sp1-4.0.0" }
-k256 = { git = "https://github.com/sp1-patches/elliptic-curves", tag = "patch-k256-13.4-sp1-4.1.0" }
-p256 = { git = "https://github.com/sp1-patches/elliptic-curves", tag = "patch-p256-13.2-sp1-4.1.0" }
+sha2 = { git = "https://github.com/brevis-network/hashes.git", package = "sha2", branch = "sha2-0.10.8-v1.0.0"}
+curve25519-dalek-ng = { git = "https://github.com/brevis-network/curve25519-dalek-ng", branch = "patch-v1.0.1"  }
+ecdsa-core = { git = "https://github.com/brevis-network/signatures", package = "ecdsa", branch = "patch-v1.0.1" }
+tiny-keccak = { git = "https://github.com/brevis-network/tiny-keccak", branch = "patch-v1.0.0" }
+bn = { git = "https://github.com/brevis-network/bn", branch = "patch-v1.0.1", package = "substrate-bn" }
+bls12_381 = { git = "https://github.com/brevis-network/bls12_381", branch = "patch-v1.0.1" }
+kzg-rs = { git = "https://github.com/brevis-network/kzg-rs.git", branch = "pico" }
+sha3 = { git = "https://github.com/brevis-network/hashes.git", branch = "sha3-0.10.8-v1.0.0"}
