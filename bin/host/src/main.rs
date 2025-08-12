@@ -1,8 +1,8 @@
 use alloy_provider::ReqwestProvider;
 use clap::Parser;
+use pico_sdk::{client::DefaultProverClient, init_logger, load_elf};
 use rsp_client_executor::{io::ClientExecutorInput, ChainVariant, CHAIN_ID_ETH_MAINNET};
 use rsp_host_executor::HostExecutor;
-use pico_sdk::{client::DefaultProverClient, init_logger, load_elf};
 use std::path::PathBuf;
 use tracing_subscriber::{
     filter::EnvFilter, fmt, prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt,

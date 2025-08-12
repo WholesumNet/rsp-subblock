@@ -1,18 +1,11 @@
 mod error;
-pub use error::Error as HostError;
-use reth_trie::AccountProof;
-use std::{
-    collections::{BTreeMap, BTreeSet, HashMap},
-    marker::PhantomData,
-    sync::Arc,
-    time::Duration,
-};
-use std::time::Instant;
 use alloy_provider::{network::AnyNetwork, Provider};
 use alloy_transport::Transport;
+pub use error::Error as HostError;
 use itertools::Itertools;
 use reth_execution_types::ExecutionOutcome;
 use reth_primitives::{proofs, Block, Bloom, Receipts, B256, U256};
+use reth_trie::AccountProof;
 use revm::db::CacheDB;
 use revm_primitives::{keccak256, Address};
 use rsp_client_executor::{
@@ -24,6 +17,12 @@ use rsp_client_executor::{
 use rsp_mpt::EthereumState;
 use rsp_primitives::account_proof::eip1186_proof_to_account_proof;
 use rsp_rpc_db::RpcDb;
+use std::{
+    collections::{BTreeMap, BTreeSet, HashMap},
+    marker::PhantomData,
+    sync::Arc,
+    time::{Duration, Instant},
+};
 use tokio::{task::JoinSet, time::sleep};
 
 /// The maximum number of times to retry fetching a proof.
@@ -370,7 +369,8 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
         let mut cumulative_executor_outcomes = ExecutionOutcome::default();
         let mut cumulative_state_requests = HashMap::new();
 
-        // These store individual state requests, executor outcomes, and state diffs for each subblock.
+        // These store individual state requests, executor outcomes, and state diffs for each
+        // subblock.
         let mut all_state_requests = Vec::new();
         let mut all_executor_outcomes = Vec::new();
         let mut state_diffs = Vec::new();
@@ -513,7 +513,11 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
 
             subblock_inputs.push(subblock_input);
 
-            println!("TIMER post-process (subblock {}): ️  {:.3?}", loop_count - 1, t_post.elapsed());
+            println!(
+                "TIMER post-process (subblock {}): ️  {:.3?}",
+                loop_count - 1,
+                t_post.elapsed()
+            );
             if num_transactions_completed >= current_block.body.len() as u64 {
                 break;
             }
@@ -564,8 +568,10 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
             after_storage_proofs.extend(after_handles.join_all().await);
         }
 
-        println!("TIMER join before & after storage proofs (get from provider):  {:.3?}", t_storage_proof.elapsed());
-
+        println!(
+            "TIMER join before & after storage proofs (get from provider):  {:.3?}",
+            t_storage_proof.elapsed()
+        );
 
         let t_state = Instant::now();
         let parent_state = EthereumState::from_transition_proofs(
@@ -644,10 +650,7 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
             bytecodes: rpc_db.get_bytecodes(),
         };
 
-        println!(
-            "TIMER fetch all ancestor headers {:.3?}",
-            t_anc.elapsed()
-        );
+        println!("TIMER fetch all ancestor headers {:.3?}", t_anc.elapsed());
         let t_prune = Instant::now();
 
         let mut big_state = parent_state.clone();

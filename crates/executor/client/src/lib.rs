@@ -279,8 +279,9 @@ impl ClientExecutor {
                 let subblock_input: SubblockInput = bincode::deserialize_from(&mut reader).unwrap();
                 println!("cycle-tracker-end: deserialize subblock input");
 
-                // Every subblock should have at least one block hash: the immediate parent block hash.
-                // So an empty block_hashes indicates that this is the first subblock.
+                // Every subblock should have at least one block hash: the immediate parent block
+                // hash. So an empty block_hashes indicates that this is the first
+                // subblock.
                 if i == 0 && block_hashes.is_none() {
                     block_hashes = Some(subblock_input.block_hashes);
                 } else {

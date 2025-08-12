@@ -5,9 +5,9 @@
 
 use alloy_provider::ReqwestProvider;
 use clap::Parser;
+use pico_sdk::{client::DefaultProverClient, init_logger, load_elf, HashableKey};
 use rsp_client_executor::{io::SubblockHostOutput, ChainVariant};
 use rsp_host_executor::HostExecutor;
-use pico_sdk::{client::DefaultProverClient, HashableKey, init_logger, load_elf};
 use std::{path::PathBuf, time::Instant};
 use tracing_subscriber::{
     filter::EnvFilter, fmt, prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt,
@@ -49,23 +49,21 @@ async fn main() -> eyre::Result<()> {
 
     // Initialize the logger.
     tracing_subscriber::registry()
-        .with(fmt::layer()
-                  .compact()
-                  .with_target(false)
-                  .with_file(false)
-                  .with_thread_names(false),
-    ).with(
-        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"))
-            .add_directive("pico_sdk=debug".parse().unwrap())
-            .add_directive("pico_vm=info".parse().unwrap())
-            .add_directive("p3_keccak_air=off".parse().unwrap())
-            .add_directive("p3_fri=off".parse().unwrap())
-            .add_directive("p3_dft=off".parse().unwrap())
-            .add_directive("p3_matrix=off".parse().unwrap())
-            .add_directive("p3_merkle_tree=off".parse().unwrap())
-            .add_directive("p3_field=off".parse().unwrap())
-            .add_directive("p3_challenger=off".parse().unwrap()),
-    ).init();
+        .with(fmt::layer().compact().with_target(false).with_file(false).with_thread_names(false))
+        .with(
+            EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| EnvFilter::new("info"))
+                .add_directive("pico_sdk=debug".parse().unwrap())
+                .add_directive("pico_vm=info".parse().unwrap())
+                .add_directive("p3_keccak_air=off".parse().unwrap())
+                .add_directive("p3_fri=off".parse().unwrap())
+                .add_directive("p3_dft=off".parse().unwrap())
+                .add_directive("p3_matrix=off".parse().unwrap())
+                .add_directive("p3_merkle_tree=off".parse().unwrap())
+                .add_directive("p3_field=off".parse().unwrap())
+                .add_directive("p3_challenger=off".parse().unwrap()),
+        )
+        .init();
 
     // Parse the command line arguments.
     let args = HostArgs::parse();
@@ -77,7 +75,6 @@ async fn main() -> eyre::Result<()> {
         provider_config.chain_id,
         args.block_number,
     )?;
-
 
     let client_input = match (cache_data, provider_config.rpc_url) {
         (Some(cache_data), _) => cache_data,
@@ -179,7 +176,10 @@ async fn schedule_subblock_execution(
     //     std::fs::write(stdin_path, bincode::serialize(&aggregation_stdin)?)?;
     // }
 
-    println!("TIMER aggregator stdin & dump_dir in schedule_subblock_execution: {:.3?}", t_dump.elapsed());
+    println!(
+        "TIMER aggregator stdin & dump_dir in schedule_subblock_execution: {:.3?}",
+        t_dump.elapsed()
+    );
 
     let t = Instant::now();
     let mut riscv_proofs = Vec::new();
@@ -205,14 +205,11 @@ async fn schedule_subblock_execution(
         // TODO: use prove flag
         // Generate proof
         let start = Instant::now();
-        let (riscv_proof, combine_proof) = subblock_client.prove_combine(stdin_builder.clone()).expect("Failed to generate proof");
+        let (riscv_proof, combine_proof) =
+            subblock_client.prove_combine(stdin_builder.clone()).expect("Failed to generate proof");
         let elapsed = start.elapsed().as_secs_f64();
 
-        tracing::info!(
-            "Subblock {}: prove duration: {:?}",
-            i,
-            elapsed,
-        );
+        tracing::info!("Subblock {}: prove duration: {:?}", i, elapsed,);
 
         riscv_proofs.push(riscv_proof);
         combine_proofs.push(combine_proof);
@@ -256,7 +253,7 @@ async fn schedule_subblock_execution(
             &mut current_public_values,
             &subblock_host_output.subblock_outputs[i],
         )
-            .unwrap();
+        .unwrap();
         public_values.push(current_public_values);
     }
 
@@ -284,21 +281,19 @@ async fn schedule_subblock_execution(
     println!("TIMER aggregator stdin: {:?}", t_agg_stdin.elapsed());
 
     let start = Instant::now();
-    // Execute the aggregation program with deferred proof verification off, since we don't have the proof yet.
-    let (agg_riscv_proof, agg_combine_proof) = agg_client
-        .prove_combine(stdin_builder.clone()).expect("Failed to generate proof");
+    // Execute the aggregation program with deferred proof verification off, since we don't have the
+    // proof yet.
+    let (agg_riscv_proof, agg_combine_proof) =
+        agg_client.prove_combine(stdin_builder.clone()).expect("Failed to generate proof");
     let elapsed = start.elapsed().as_secs_f64();
 
-    tracing::info!(
-            "Aggregator: prove duration: {:?}",
-            elapsed,
-        );
+    tracing::info!("Aggregator: prove duration: {:?}", elapsed,);
 
     if execute {
         let start = Instant::now();
-        // Execute the aggregation program with deferred proof verification off, since we don't have the proof yet.
-        let (cycles, _pv_stream) = agg_client
-            .emulate(stdin_builder);
+        // Execute the aggregation program with deferred proof verification off, since we don't have
+        // the proof yet.
+        let (cycles, _pv_stream) = agg_client.emulate(stdin_builder);
         let elapsed = start.elapsed().as_secs_f64();
 
         let agg_instruction_count = cycles;
