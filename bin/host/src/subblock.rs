@@ -48,7 +48,24 @@ async fn main() -> eyre::Result<()> {
     dotenv::dotenv().ok();
 
     // Initialize the logger.
-    tracing_subscriber::registry().with(fmt::layer()).with(EnvFilter::from_default_env()).init();
+    tracing_subscriber::registry()
+        .with(fmt::layer()
+                  .compact()
+                  .with_target(false)
+                  .with_file(false)
+                  .with_thread_names(false),
+    ).with(
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"))
+            .add_directive("pico_sdk=debug".parse().unwrap())
+            .add_directive("pico_vm=info".parse().unwrap())
+            .add_directive("p3_keccak_air=off".parse().unwrap())
+            .add_directive("p3_fri=off".parse().unwrap())
+            .add_directive("p3_dft=off".parse().unwrap())
+            .add_directive("p3_matrix=off".parse().unwrap())
+            .add_directive("p3_merkle_tree=off".parse().unwrap())
+            .add_directive("p3_field=off".parse().unwrap())
+            .add_directive("p3_challenger=off".parse().unwrap()),
+    ).init();
 
     // Parse the command line arguments.
     let args = HostArgs::parse();
