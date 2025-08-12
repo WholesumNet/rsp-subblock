@@ -29,6 +29,8 @@ struct HostArgs {
     /// Note: does not generate a proof.
     #[clap(long)]
     execute: bool,
+    #[clap(long)]
+    prove: bool,
     /// Where to dump the elf and stdin for the subblock and aggregation programs.
     #[clap(long)]
     dump_dir: Option<PathBuf>,
@@ -119,6 +121,7 @@ async fn main() -> eyre::Result<()> {
         agg_client,
         client_input,
         args.execute,
+        args.prove,
         args.dump_dir,
     )
     .await?;
@@ -136,6 +139,7 @@ async fn schedule_subblock_execution(
     agg_client: DefaultProverClient,
     inputs: SubblockHostOutput,
     execute: bool,
+    prove: bool,
     dump_dir: Option<PathBuf>,
 ) -> eyre::Result<()> {
     let t_dump = Instant::now();
@@ -161,6 +165,9 @@ async fn schedule_subblock_execution(
     println!("TIMER aggregator stdin & dump_dir in schedule_subblock_execution: {:.3?}", t_dump.elapsed());
 
     let t = Instant::now();
+    let mut riscv_proofs = Vec::new();
+    let mut combine_proofs = Vec::new();
+    let subblock_vk = subblock_client.riscv_vk().clone();
 
     for i in 0..inputs.subblock_inputs.len() {
         let input = &inputs.subblock_inputs[i];
@@ -178,10 +185,25 @@ async fn schedule_subblock_execution(
             std::fs::write(stdin_path, bincode::serialize(&stdin_builder)?)?;
         }
 
+        // TODO: use prove flag
+        // Generate proof
+        let start = Instant::now();
+        let (riscv_proof, combine_proof) = subblock_client.prove_combine(stdin_builder.clone()).expect("Failed to generate proof");
+        let elapsed = start.elapsed().as_secs_f64();
+
+        tracing::info!(
+            "Subblock {}: prove duration: {:?}",
+            i,
+            elapsed,
+        );
+
+        riscv_proofs.push(riscv_proof);
+        combine_proofs.push(combine_proof);
+
         if execute {
             let start = Instant::now();
 
-            let (cycles, _pv_stream) = subblock_client.emulate(stdin_builder);
+            let (cycles, _pv_stream) = subblock_client.emulate(stdin_builder.clone());
 
             let elapsed = start.elapsed().as_secs_f64();
             let subblock_instruction_count = cycles;
@@ -238,7 +260,22 @@ async fn schedule_subblock_execution(
     stdin_builder.write::<[u32; 8]>(&subblock_client.riscv_vk().hash_u32());
     stdin_builder.write(&subblock_host_output.agg_input);
     stdin_builder.write(&subblock_host_output.agg_input.parent_header().state_root);
+    assert_eq!(riscv_proofs.len(), combine_proofs.len());
+    for i in 0..riscv_proofs.len() {
+        stdin_builder.write_pico_proof(combine_proofs[i].clone(), subblock_vk.clone());
+    }
     println!("TIMER aggregator stdin: {:?}", t_agg_stdin.elapsed());
+
+    let start = Instant::now();
+    // Execute the aggregation program with deferred proof verification off, since we don't have the proof yet.
+    let (agg_riscv_proof, agg_combine_proof) = agg_client
+        .prove_combine(stdin_builder.clone()).expect("Failed to generate proof");
+    let elapsed = start.elapsed().as_secs_f64();
+
+    tracing::info!(
+            "Aggregator: prove duration: {:?}",
+            elapsed,
+        );
 
     if execute {
         let start = Instant::now();
