@@ -7,7 +7,7 @@ export CHUNK_BATCH_SIZE=16
 export SPLIT_THRESHOLD=32768
 export RUSTFLAGS="-C target-cpu=native -C target-feature=+avx512f,+avx512ifma,+avx512vl"
 export VK_VERIFICATION=true
-BLOCK_NUMBER=18884864
+BLOCK_NUMBER=20528658
 CHAIN_ID=1
 # GAS_LIMITS=(16000000 8000000 1000000)
 # GAS_LIMITS=(1000000 2000000 4000000 8000000 )
@@ -16,7 +16,7 @@ DUMP_DIR=./dump_dir
 CACHE_DIR=./cache_dir
 LOG_DIR=./logs
 # RUST_LOG_LEVEL="info,pico_sdk=debug,pico_vm=debug,rsp_host_executor=info,rsp_client_executor=info,alloy_provider=warn"
-RUST_LOG_LEVEL=debug
+RUST_LOG_LEVEL=info
 # RUST_LOG="info,pico_sdk=debug,pico_vm=info,rsp_host_executor=info,rsp_client_executor=info,alloy_provider=warn"
 
 # --------------------------------
