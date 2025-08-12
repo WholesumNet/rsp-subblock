@@ -3565,7 +3565,7 @@ dependencies = [
 [[package]]
 name = "pico-derive"
 version = "0.1.0"
-source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=feat-defer-proof#d3a00b12a622477413571526904a12826121fd78"
+source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=feat-defer-proof#693351841e934828ece1d51e435d2ee5445584ab"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3584,7 +3584,7 @@ dependencies = [
 [[package]]
 name = "pico-sdk"
 version = "1.0.1"
-source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=feat-defer-proof#d3a00b12a622477413571526904a12826121fd78"
+source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=feat-defer-proof#693351841e934828ece1d51e435d2ee5445584ab"
 dependencies = [
  "anyhow",
  "bincode",
@@ -3610,7 +3610,7 @@ dependencies = [
 [[package]]
 name = "pico-vm"
 version = "1.0.1"
-source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=feat-defer-proof#d3a00b12a622477413571526904a12826121fd78"
+source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=feat-defer-proof#693351841e934828ece1d51e435d2ee5445584ab"
 dependencies = [
  "anyhow",
  "arrayref",
