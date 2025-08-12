@@ -2,9 +2,11 @@
 set -euo pipefail
 
 # --------- Configuration ---------
-BLOCK_NUMBER=22792000
+export CHUNK_SIZE=4194304
+BLOCK_NUMBER=20528658
 CHAIN_ID=1
-GAS_LIMITS=(1000000 8000000 16000000)
+# GAS_LIMITS=(16000000 8000000 1000000)
+GAS_LIMITS=(1000000 2000000 4000000 8000000 )
 DUMP_DIR=./dump_dir
 CACHE_DIR=./cache_dir
 LOG_DIR=./logs
@@ -26,7 +28,8 @@ for GAS in "${GAS_LIMITS[@]}"; do
     --block-number "$BLOCK_NUMBER" \
     --chain-id "$CHAIN_ID" \
     --execute \
-    --dump-dir "$DUMP_DIR" \
-    --cache-dir "$CACHE_DIR" \
     2>&1 | tee "$log_file"
+    # --dump-dir "$DUMP_DIR" \
+    # --cache-dir "$CACHE_DIR" \
+  
 done
