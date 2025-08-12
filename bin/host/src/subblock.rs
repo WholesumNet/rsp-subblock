@@ -106,9 +106,9 @@ async fn main() -> eyre::Result<()> {
     let t_post_client_input = Instant::now();
     let t_setup_client = Instant::now();
     // Generate the proof.
-    let subblock_elf = load_elf("./bin/client-eth-subblock/elf/riscv32im-pico-zkvm-elf");
+    let subblock_elf = load_elf("./bin/client-eth-subblock/pico-elf/riscv32im-pico-zkvm-elf");
     let subblock_client = DefaultProverClient::new(&subblock_elf);
-    let agg_elf = load_elf("./bin/client-eth-agg/elf/riscv32im-pico-zkvm-elf");
+    let agg_elf = load_elf("./bin/client-eth-agg/pico-elf/riscv32im-pico-zkvm-elf");
     let agg_client = DefaultProverClient::new(&agg_elf);
 
     println!("TIMER_ALL t_setup_client: {:.3?}", t_setup_client.elapsed());
