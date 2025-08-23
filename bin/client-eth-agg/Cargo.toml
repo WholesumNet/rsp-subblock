@@ -17,7 +17,7 @@ reth-primitives = { git = "https://github.com/succinctlabs/reth-subblock", branc
 ] }
 
 # pico
-pico-sdk = { git = "ssh://git@github.com/brevis-network/brevis-vm.git", branch = "feat-defer-proof" }
+pico-sdk = { git = "ssh://git@github.com/brevis-network/brevis-vm.git", branch = "temp-defer-proof" }
 
 # Statically turns off logging
 log = { version = "0.4", features = ["max_level_off", "release_max_level_off"] }

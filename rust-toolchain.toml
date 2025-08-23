@@ -1,6 +1,11 @@
 [toolchain]
-channel = "nightly-2024-11-27"
-components = ["clippy", "rustfmt"]
+channel = "nightly-2025-08-04"
+components = ["clippy", "rustfmt", "rust-analyzer"]
+
+
+#[toolchain]
+#channel = "nightly-2024-11-27"
+#components = ["clippy", "rustfmt"]
 
 #[toolchain]
 #channel = "1.85.0"

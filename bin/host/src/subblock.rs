@@ -8,7 +8,7 @@ use clap::Parser;
 use pico_sdk::{client::DefaultProverClient, init_logger, load_elf, HashableKey};
 use rsp_client_executor::{io::SubblockHostOutput, ChainVariant};
 use rsp_host_executor::HostExecutor;
-use std::{path::PathBuf, time::Instant};
+use std::{fs::File, io::BufWriter, path::PathBuf, time::Instant};
 use tracing_subscriber::{
     filter::EnvFilter, fmt, prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt,
 };
@@ -277,10 +277,19 @@ async fn schedule_subblock_execution(
     stdin_builder.write::<[u32; 8]>(&subblock_client.riscv_vk().hash_u32());
     stdin_builder.write(&subblock_host_output.agg_input);
     stdin_builder.write(&subblock_host_output.agg_input.parent_header().state_root);
+
+    let f = BufWriter::new(File::create("aggregator_stdin_builder.bin")?);
+    bincode::serialize_into(f, &stdin_builder)?;
     assert_eq!(riscv_proofs.len(), combine_proofs.len());
+    // assert_eq!(riscv_proofs.len(), 1);
     for i in 0..riscv_proofs.len() {
         stdin_builder.write_pico_proof(combine_proofs[i].clone(), subblock_vk.clone());
+        combine_proofs[i].save_to_file("defer_proof_before.bin");
     }
+
+    let f = BufWriter::new(File::create("final_aggregator_stdin_builder.bin")?);
+    bincode::serialize_into(f, &stdin_builder)?;
+
     println!("TIMER aggregator stdin: {:?}", t_agg_stdin.elapsed());
 
     let start = Instant::now();

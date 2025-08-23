@@ -13,7 +13,7 @@ rsp-client-executor = { path = "../../crates/executor/client" }
 rsp-mpt = { path = "../../crates/mpt" }
 
 # pico
-pico-sdk = { git = "ssh://git@github.com/brevis-network/brevis-vm.git", branch = "feat-defer-proof" }
+pico-sdk = { git = "ssh://git@github.com/brevis-network/brevis-vm.git", branch = "temp-defer-proof" }
 
 # rkyv
 rkyv = "0.8.10"

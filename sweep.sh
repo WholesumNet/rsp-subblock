@@ -3,15 +3,15 @@ set -euo pipefail
 
 # --------- Configuration ---------
 export CHUNK_SIZE=4194304
-export CHUNK_BATCH_SIZE=16
-export SPLIT_THRESHOLD=32768
+export CHUNK_BATCH_SIZE=8
+export SPLIT_THRESHOLD=1048576
 export RUSTFLAGS="-C target-cpu=native -C target-feature=+avx512f,+avx512ifma,+avx512vl"
 export VK_VERIFICATION=true
 BLOCK_NUMBER=20528658
 CHAIN_ID=1
 # GAS_LIMITS=(16000000 8000000 1000000)
 # GAS_LIMITS=(1000000 2000000 4000000 8000000 )
-GAS_LIMITS=(8000000 )
+GAS_LIMITS=(4000000)
 DUMP_DIR=./dump_dir
 CACHE_DIR=./cache_dir
 LOG_DIR=./logs
