@@ -4,8 +4,13 @@ name = "rsp-client-eth-subblock"
 description = ""
 edition = "2021"
 
+# elf optimization
 [profile.release]
+opt-level = 3
 lto = "fat"
+codegen-units = 1
+debug = true
+embed-bitcode = true
 
 [dependencies]
 # workspace
