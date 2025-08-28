@@ -195,6 +195,9 @@ async fn schedule_subblock_execution(
         let mut stdin_builder = subblock_client.new_stdin_builder();
         stdin_builder.write(input);
         stdin_builder.write_slice(parent_state);
+        let filename = format!("subblock_stdin_builder_{}.bin", i);
+        let f = BufWriter::new(File::create(filename)?);
+        bincode::serialize_into(f, &stdin_builder)?;
 
         // Save the elf/stdin pair to the dump directory.
         if let Some(dump_dir) = dump_dir.as_ref() {
@@ -273,6 +276,11 @@ async fn schedule_subblock_execution(
     //     rkyv::from_bytes::<EthereumState, rkyv::rancor::BoxedError>(&aligned_vec).unwrap();
     // let parent_state_root = parent_state.state_root();
 
+    dump_agg_stdin_to_files(
+        &public_values,
+        &subblock_client.riscv_vk().hash_u32(),
+        &subblock_host_output.agg_input,
+    );
     stdin_builder.write::<Vec<Vec<u8>>>(&public_values);
     stdin_builder.write::<[u32; 8]>(&subblock_client.riscv_vk().hash_u32());
     stdin_builder.write(&subblock_host_output.agg_input);
@@ -369,6 +377,35 @@ async fn schedule_subblock_execution(
 //     stdin_builder.write(&subblock_host_output.agg_input.parent_header().state_root);
 //     stdin_builder
 // }
+
+use bincode;
+use rsp_client_executor::io::AggregationInput;
+use serde::Serialize;
+use std::io::Write;
+
+fn dump_agg_stdin_to_files(
+    public_values: &Vec<Vec<u8>>,
+    vk_digest: &[u32; 8],
+    agg_input: &AggregationInput,
+) -> std::io::Result<()> {
+    // 1. public_values
+    let bytes = bincode::serialize(public_values).unwrap();
+    File::create("public_values_20528658.bin")?.write_all(&bytes)?;
+
+    // 2. vk_digest
+    let bytes = bincode::serialize(vk_digest).unwrap();
+    File::create("vk_digest_20528658.bin")?.write_all(&bytes)?;
+
+    // 3. agg_input
+    let bytes = bincode::serialize(agg_input).unwrap();
+    File::create("agg_input_20528658.bin")?.write_all(&bytes)?;
+
+    // 4. state_root
+    let bytes = bincode::serialize(&agg_input.parent_header().state_root).unwrap();
+    File::create("state_root_20528658.bin")?.write_all(&bytes)?;
+
+    Ok(())
+}
 
 fn try_load_input_from_cache(
     cache_dir: Option<&PathBuf>,
