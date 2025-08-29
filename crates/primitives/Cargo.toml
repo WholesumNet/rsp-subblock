@@ -11,12 +11,15 @@ repository.workspace = true
 rkyv.workspace = true
 
 # reth
-reth-primitives.workspace = true
-reth-trie.workspace = true
 reth-chainspec.workspace = true
+reth-primitives-traits.workspace = true
+reth-trie.workspace = true
 
 # revm
 revm-primitives.workspace = true
 
 # alloy
+alloy-consensus.workspace = true
+alloy-eips.workspace = true
+alloy-primitives.workspace = true
 alloy-rpc-types.workspace = true

@@ -1,8 +1,11 @@
 #![no_main]
 pico_sdk::entrypoint!(main);
 
-use reth_primitives::B256;
-use rsp_client_executor::{io::AggregationInput, ClientExecutor, EthereumVariant};
+use alloy_primitives::B256;
+use rsp_client_executor::{
+    io::{AggregationInput, BlockWrapper},
+    ClientExecutor, EthereumVariant,
+};
 
 pub fn main() {
     // Read the input.
@@ -15,8 +18,11 @@ pub fn main() {
     println!("cycle-tracker-end: deserialize aggregation input");
 
     let parent_state_root = pico_sdk::io::read_as::<B256>();
+    println!("cycle-tracker: commit parent_state_root");
     pico_sdk::io::commit(&parent_state_root);
-    pico_sdk::io::commit(&aggregation_input.current_block);
+    println!("cycle-tracker: commit current_block");
+    let current_block = BlockWrapper { inner: aggregation_input.current_block.clone() };
+    pico_sdk::io::commit(&current_block);
     println!("cycle-tracker-end: deserialize");
 
     let client = ClientExecutor;

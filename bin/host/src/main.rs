@@ -1,6 +1,8 @@
+#![allow(deprecated)]
+
 use alloy_provider::ReqwestProvider;
 use clap::Parser;
-use pico_sdk::{client::DefaultProverClient, init_logger, load_elf};
+use pico_sdk::{client::DefaultProverClient, load_elf};
 use rsp_client_executor::{io::ClientExecutorInput, ChainVariant, CHAIN_ID_ETH_MAINNET};
 use rsp_host_executor::HostExecutor;
 use std::path::PathBuf;
@@ -104,7 +106,7 @@ async fn main() -> eyre::Result<()> {
     stdin_builder.write_slice(&buffer);
 
     // Only execute the program.
-    let (cycles, pv_stream) = client.emulate(stdin_builder.clone());
+    let (cycles, _pv_stream) = client.emulate(stdin_builder.clone());
     // let (_public_values, execution_report) = client.execute(&pk.elf, &stdin).run().unwrap();
 
     println!("rsp cycles: {}", cycles);

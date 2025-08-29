@@ -21,7 +21,6 @@ itertools = "0.13.0"
 rsp-primitives.workspace = true
 
 # reth
-reth-primitives.workspace = true
 reth-trie.workspace = true
 
 # revm

@@ -3,20 +3,34 @@ use std::{
     iter::once,
 };
 
+use alloy_eips::eip7685::Requests;
+use alloy_primitives::{Bloom, B256};
 use itertools::Itertools;
 use reth_errors::ProviderError;
-use reth_primitives::{
-    revm_primitives::AccountInfo, Address, Block, Bloom, Header, Receipt, Request, B256, U256,
-};
+use reth_ethereum_primitives::TransactionSigned;
+use reth_primitives::{Block, Header, Receipt};
 use reth_trie::{TrieAccount, EMPTY_ROOT_HASH};
-use revm::DatabaseRef;
-use revm_primitives::{keccak256, Bytecode};
+use revm::{
+    state::{AccountInfo, Bytecode},
+    DatabaseRef,
+};
+use revm_primitives::{keccak256, Address, U256};
 use rsp_mpt::EthereumState;
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 
 use rkyv::util::AlignedVec;
 
 use crate::{error::ClientError, EthereumVariant};
+
+#[serde_as]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct BlockWrapper {
+    #[serde_as(
+        as = "reth_primitives_traits::serde_bincode_compat::Block<'_, TransactionSigned, Header>"
+    )]
+    pub inner: Block,
+}
 
 /// The input for the client to execute a block and fully verify the STF (state transition
 /// function).
@@ -33,7 +47,7 @@ pub struct ClientExecutorInput {
     /// Network state as of the parent block.
     pub parent_state: EthereumState,
     /// Requests to account state and storage slots.
-    pub state_requests: HashMap<Address, Vec<U256>>,
+    pub state_requests: alloy_primitives::map::HashMap<Address, Vec<U256>>,
     /// Account bytecodes.
     pub bytecodes: Vec<Bytecode>,
 }
@@ -79,9 +93,13 @@ impl WitnessInput for ClientExecutorInput {
 }
 
 /// Input to the subblock program.
+#[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct SubblockInput {
     /// The current block (which will be executed inside the client).
+    #[serde_as(
+        as = "reth_primitives_traits::serde_bincode_compat::Block<'_, TransactionSigned, Header>"
+    )]
     pub current_block: Block,
     /// The blockhashes used by the subblock.
     ///
@@ -101,18 +119,20 @@ pub struct SubblockInput {
 /// The committed execution output of the subblock program.
 ///
 /// The subblock program also commits its `[SubblockInput]`.
+#[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct SubblockOutput {
+    /// The state root before executing this subblock.
+    pub input_state_root: B256,
     /// The new state root after executing this subblock.
     pub output_state_root: B256,
     /// The logs bloom.
     pub logs_bloom: Bloom,
     /// The transaction receipts.
+    #[serde_as(as = "Vec<reth_ethereum_primitives::serde_bincode_compat::Receipt>")]
     pub receipts: Vec<Receipt>,
-    /// The state root before executing this subblock.
-    pub input_state_root: B256,
     /// EIP 7685 Requests.
-    pub requests: Vec<Request>,
+    pub requests: Requests,
 }
 
 impl SubblockOutput {
@@ -179,12 +199,17 @@ impl SubblockHostOutput {
 }
 
 /// The input for the client to aggregate multiple subblocks and prove their consistency.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde_as]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AggregationInput {
     /// The current block (which will be executed inside the client).
+    #[serde_as(
+        as = "reth_primitives_traits::serde_bincode_compat::Block<'_, TransactionSigned, Header>"
+    )]
     pub current_block: Block,
     /// The previous block headers starting from the most recent. There must be at least one header
     /// to provide the parent state root.
+    #[serde_as(as = "Vec<alloy_consensus::serde_bincode_compat::Header>")]
     pub ancestor_headers: Vec<Header>,
     /// Account bytecodes.
     pub bytecodes: Vec<Bytecode>,

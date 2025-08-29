@@ -1,6 +1,9 @@
+#![feature(trivial_bounds)]
+
+use alloy_primitives::map::{foldhash::HashMapExt, HashMap};
 use itertools::Itertools;
-use reth_trie::{AccountProof, HashedPostState, TrieAccount};
-use revm::primitives::{Address, HashMap, B256};
+use reth_trie::{AccountProof, HashedPostState, HashedStorage, TrieAccount};
+use revm::primitives::{Address, B256};
 use rkyv::with::{Identity, MapKV};
 use rsp_primitives::rkyv::B256Def;
 use serde::{Deserialize, Serialize};
@@ -51,11 +54,13 @@ impl EthereumState {
     /// Mutates state based on diffs provided in [`HashedPostState`].
     pub fn update(&mut self, post_state: &HashedPostState) {
         for (hashed_address, account) in post_state.accounts.iter() {
-            let hashed_address = hashed_address.as_slice();
-
             match account {
                 Some(account) => {
-                    let state_storage = &post_state.storages.get(hashed_address).unwrap();
+                    let state_storage = &post_state
+                        .storages
+                        .get(hashed_address)
+                        .cloned()
+                        .unwrap_or_else(|| HashedStorage::new(false));
                     let storage_root = {
                         let storage_trie = self.storage_tries.get_mut(hashed_address).unwrap();
 
@@ -81,10 +86,10 @@ impl EthereumState {
                         storage_root,
                         code_hash: account.get_bytecode_hash(),
                     };
-                    self.state_trie.insert_rlp(hashed_address, state_account).unwrap();
+                    self.state_trie.insert_rlp(hashed_address.as_slice(), state_account).unwrap();
                 }
                 None => {
-                    self.state_trie.delete(hashed_address).unwrap();
+                    self.state_trie.delete(hashed_address.as_slice()).unwrap();
                 }
             }
         }
@@ -139,7 +144,11 @@ impl EthereumState {
 
             match account {
                 Some(_account) => {
-                    let state_storage = &post_state.storages.get(hashed_address).unwrap();
+                    let state_storage = &post_state
+                        .storages
+                        .get(hashed_address)
+                        .cloned()
+                        .unwrap_or_else(|| HashedStorage::new(false));
 
                     let storage_trie = self.storage_tries.get_mut(hashed_address).unwrap();
                     let account_touched =

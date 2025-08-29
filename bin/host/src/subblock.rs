@@ -3,15 +3,14 @@
 //! This is a standalone program that can be used to execute a subblock, and optionally dump the
 //! elf/stdin pairs to a directory.
 
+#![allow(deprecated)]
+
 use alloy_provider::ReqwestProvider;
 use clap::Parser;
 use pico_sdk::{client::DefaultProverClient, init_logger, load_elf, HashableKey};
 use rsp_client_executor::{io::SubblockHostOutput, ChainVariant};
 use rsp_host_executor::HostExecutor;
 use std::{path::PathBuf, time::Instant};
-use tracing_subscriber::{
-    filter::EnvFilter, fmt, prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt,
-};
 
 mod cli;
 use cli::ProviderArgs;
@@ -150,11 +149,11 @@ async fn main() -> eyre::Result<()> {
 
 async fn schedule_subblock_execution(
     subblock_client: DefaultProverClient,
-    block_number: u64,
+    _block_number: u64,
     agg_client: DefaultProverClient,
     inputs: SubblockHostOutput,
     execute: bool,
-    prove: bool,
+    _prove: bool,
     dump_dir: Option<PathBuf>,
 ) -> eyre::Result<()> {
     let t_dump = Instant::now();
@@ -286,7 +285,7 @@ async fn schedule_subblock_execution(
     let start = Instant::now();
     // Execute the aggregation program with deferred proof verification off, since we don't have the
     // proof yet.
-    let (agg_riscv_proof, agg_combine_proof) =
+    let (_agg_riscv_proof, _agg_combine_proof) =
         agg_client.prove_combine(stdin_builder.clone()).expect("Failed to generate proof");
     let elapsed = start.elapsed().as_secs_f64();
 
@@ -367,8 +366,7 @@ fn try_load_input_from_cache(
     block_number: u64,
 ) -> eyre::Result<Option<SubblockHostOutput>> {
     Ok(if let Some(cache_dir) = cache_dir {
-        let cache_path =
-            cache_dir.join(format!("subblock-input/{}/{}.bin", chain_id, block_number));
+        let cache_path = cache_dir.join(format!("input/{}/{}.bin", chain_id, block_number));
 
         if cache_path.exists() {
             // Try to open and deserialize the cache file, delete it if there's an error
