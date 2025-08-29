@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use alloy_provider::{network::AnyNetwork, Provider as _, ReqwestProvider};
 use clap::Parser;
 use url::Url;

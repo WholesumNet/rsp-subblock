@@ -1,13 +1,16 @@
 mod error;
-use alloy_provider::{network::AnyNetwork, Provider};
-use alloy_transport::Transport;
+
+use alloy_consensus::{Block, TxEnvelope, TxReceipt};
+use alloy_network::Ethereum;
+use alloy_primitives::Bloom;
+use alloy_provider::Provider;
 pub use error::Error as HostError;
 use itertools::Itertools;
 use reth_execution_types::ExecutionOutcome;
-use reth_primitives::{proofs, Block, Bloom, Receipts, B256, U256};
-use reth_trie::AccountProof;
-use revm::db::CacheDB;
-use revm_primitives::{keccak256, Address};
+use reth_primitives_traits::{proofs, Block as BlockTrait};
+use reth_trie::{AccountProof, KeccakKeyHasher};
+use revm::database::CacheDB;
+use revm_primitives::{keccak256, Address, B256, U256};
 use rsp_client_executor::{
     io::{
         AggregationInput, ClientExecutorInput, SubblockHostOutput, SubblockInput, SubblockOutput,
@@ -19,7 +22,7 @@ use rsp_primitives::account_proof::eip1186_proof_to_account_proof;
 use rsp_rpc_db::RpcDb;
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap},
-    marker::PhantomData,
+    fmt::Debug,
     sync::Arc,
     time::{Duration, Instant},
 };
@@ -32,11 +35,9 @@ const INITIAL_RETRY_BACKOFF: Duration = Duration::from_millis(100);
 
 /// An executor that fetches data from a [Provider] to execute blocks in the [ClientExecutor].
 #[derive(Debug, Clone)]
-pub struct HostExecutor<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone> {
+pub struct HostExecutor<P: Provider<Ethereum> + Clone> {
     /// The provider which fetches data.
     pub provider: Arc<P>,
-    /// A phantom type to make the struct generic over the transport.
-    pub phantom: PhantomData<T>,
 }
 lazy_static::lazy_static! {
     /// Amount of gas used per subblock.
@@ -47,17 +48,17 @@ lazy_static::lazy_static! {
 
 fn merge_state_requests(
     state_requests: &mut HashMap<Address, Vec<U256>>,
-    subblock_state_requests: &HashMap<Address, Vec<U256>>,
+    subblock_state_requests: &alloy_primitives::map::HashMap<Address, Vec<U256>>,
 ) {
     for (address, keys) in subblock_state_requests.iter() {
         state_requests.entry(*address).or_default().extend(keys.iter().cloned());
     }
 }
 
-impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExecutor<T, P> {
+impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
     /// Create a new [`HostExecutor`] with a specific [Provider] and [Transport].
     pub fn new(provider: P) -> Self {
-        Self { provider: Arc::new(provider), phantom: PhantomData }
+        Self { provider: Arc::new(provider) }
     }
 
     async fn get_proof(
@@ -106,8 +107,9 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
         block_number: u64,
         variant: ChainVariant,
     ) -> Result<ClientExecutorInput, HostError> {
+        tracing::info!("execute block_number={block_number}");
         match variant {
-            ChainVariant::Ethereum => self.execute_variant::<EthereumVariant>(block_number).await,
+            ChainVariant::Ethereum => self.execute_variant(block_number).await,
         }
     }
 
@@ -118,37 +120,40 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
         block_number: u64,
         variant: ChainVariant,
     ) -> Result<SubblockHostOutput, HostError> {
+        tracing::info!("execute_subblock block_number={block_number}");
         match variant {
-            ChainVariant::Ethereum => {
-                self.execute_variant_subblocks::<EthereumVariant>(block_number).await
-            }
+            ChainVariant::Ethereum => self.execute_variant_subblocks(block_number).await,
         }
     }
 
-    async fn execute_variant<V>(&self, block_number: u64) -> Result<ClientExecutorInput, HostError>
-    where
-        V: Variant,
-    {
+    async fn execute_variant(&self, block_number: u64) -> Result<ClientExecutorInput, HostError> {
         // Fetch the current block and the previous block from the provider.
         tracing::info!("fetching the current block and the previous block");
 
         let current_block = self
             .provider
-            .get_block_by_number(block_number.into(), true)
+            .get_block_by_number(block_number.into())
+            .full()
             .await?
             .ok_or(HostError::ExpectedBlock(block_number))
-            .map(|block| Block::try_from(block.inner))??;
+            .map(|block| {
+                let block = block.map_transactions(|tx| TxEnvelope::from(tx).into());
+                block.into_consensus()
+            })?;
 
-        let previous_block = self
+        let previous_block: Block<_> = self
             .provider
-            .get_block_by_number((block_number - 1).into(), true)
+            .get_block_by_number((block_number - 1).into())
+            .full()
             .await?
             .ok_or(HostError::ExpectedBlock(block_number))
-            .map(|block| Block::try_from(block.inner))??;
+            .map(|block| {
+                let block = block.map_transactions(TxEnvelope::from);
+                block.into_consensus()
+            })?;
 
         // Setup the spec for the block executor.
         tracing::info!("setting up the spec for the block executor");
-        let spec = V::spec();
 
         // Setup the database for the block executor.
         tracing::info!("setting up the database for the block executor");
@@ -159,19 +164,19 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
         tracing::info!(
             "executing the block and with rpc db: block_number={}, transaction_count={}",
             block_number,
-            current_block.body.len()
+            current_block.body.transactions.len()
         );
 
-        let executor_block_input = V::pre_process_block(&current_block)
-            .with_recovered_senders()
-            .ok_or(HostError::FailedToRecoverSenders)?;
+        let executor_block_input = EthereumVariant::pre_process_block(&current_block)
+            .try_into_recovered()
+            .map_err(|_| HostError::FailedToRecoverSenders)?;
 
-        let executor_difficulty = current_block.header.difficulty;
-        let executor_output = V::execute(&executor_block_input, executor_difficulty, cache_db)?;
+        let spec = EthereumVariant::spec();
+        let executor_output = EthereumVariant::execute(&executor_block_input, &spec, cache_db)?;
 
         // Validate the block post execution.
         tracing::info!("validating the block post execution");
-        V::validate_block_post_execution(
+        EthereumVariant::validate_block_post_execution(
             &executor_block_input,
             &spec,
             &executor_output.receipts,
@@ -182,15 +187,15 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
         tracing::info!("accumulating the logs bloom");
         let mut logs_bloom = Bloom::default();
         executor_output.receipts.iter().for_each(|r| {
-            logs_bloom.accrue_bloom(&r.bloom_slow());
+            logs_bloom.accrue_bloom(&r.bloom());
         });
 
         // Convert the output to an execution outcome.
         let executor_outcome = ExecutionOutcome::new(
             executor_output.state,
-            Receipts::from(executor_output.receipts),
+            vec![executor_output.result.receipts],
             current_block.header.number,
-            vec![executor_output.requests.into()],
+            vec![executor_output.result.requests],
         );
 
         let state_requests = rpc_db.get_state_requests();
@@ -245,7 +250,7 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
         tracing::info!("verifying the state root");
         let state_root = {
             let mut mutated_state = state.clone();
-            mutated_state.update(&executor_outcome.hash_state_slow());
+            mutated_state.update(&executor_outcome.hash_state_slow::<KeccakKeyHasher>());
             mutated_state.state_root()
         };
         if state_root != current_block.state_root {
@@ -257,17 +262,18 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
         // Note: the receipts root and gas used are verified by `validate_block_post_execution`.
         let mut header = current_block.header.clone();
         header.parent_hash = previous_block.hash_slow();
-        header.ommers_hash = proofs::calculate_ommers_root(&current_block.ommers);
+        header.ommers_hash = proofs::calculate_ommers_root(&current_block.body.ommers);
         header.state_root = current_block.state_root;
-        header.transactions_root = proofs::calculate_transaction_root(&current_block.body);
+        header.transactions_root =
+            proofs::calculate_transaction_root(&current_block.body.transactions);
         header.receipts_root = current_block.header.receipts_root;
         header.withdrawals_root = current_block
+            .body
             .withdrawals
             .clone()
             .map(|w| proofs::calculate_withdrawals_root(w.into_inner().as_slice()));
         header.logs_bloom = logs_bloom;
-        header.requests_root =
-            current_block.requests.as_ref().map(|r| proofs::calculate_requests_root(&r.0));
+        header.requests_hash = current_block.header.requests_hash;
 
         // Assert the derived header is correct.
         let constructed_header_hash = header.hash_slow();
@@ -291,16 +297,16 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
         for height in (oldest_ancestor..=(block_number - 1)).rev() {
             let block = self
                 .provider
-                .get_block_by_number(height.into(), false)
+                .get_block_by_number(height.into())
                 .await?
                 .ok_or(HostError::ExpectedBlock(height))?;
 
-            ancestor_headers.push(block.inner.header.try_into()?);
+            ancestor_headers.push(block.header.into());
         }
 
         // Create the client input.
         let client_input = ClientExecutorInput {
-            current_block: V::pre_process_block(&current_block),
+            current_block: EthereumVariant::pre_process_block(&current_block),
             ancestor_headers,
             parent_state: state,
             state_requests,
@@ -311,34 +317,39 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
         Ok(client_input)
     }
 
-    async fn execute_variant_subblocks<V>(
+    async fn execute_variant_subblocks(
         &self,
         block_number: u64,
-    ) -> Result<SubblockHostOutput, HostError>
-    where
-        V: Variant,
-    {
+    ) -> Result<SubblockHostOutput, HostError> {
         let t = Instant::now();
         // Fetch the current block and the previous block from the provider.
         tracing::info!("fetching the current block and the previous block");
         let current_block = self
             .provider
-            .get_block_by_number(block_number.into(), true)
+            .get_block_by_number(block_number.into())
+            .full()
             .await?
             .ok_or(HostError::ExpectedBlock(block_number))
-            .map(|block| Block::try_from(block.inner))??;
+            .map(|block| {
+                let block = block.map_transactions(|tx| TxEnvelope::from(tx).into());
+                block.into_consensus()
+            })?;
 
         let previous_block = self
             .provider
-            .get_block_by_number((block_number - 1).into(), true)
+            .get_block_by_number((block_number - 1).into())
+            .full()
             .await?
             .ok_or(HostError::ExpectedBlock(block_number))
-            .map(|block| Block::try_from(block.inner))??;
+            .map(|block| {
+                let block = block.map_transactions(TxEnvelope::from);
+                block.into_consensus()
+            })?;
 
         println!("TIMER fetch current & parent block:  {:.3?}", t.elapsed());
         let t = Instant::now();
 
-        let total_transactions = current_block.body.len() as u64;
+        let total_transactions = current_block.body.transactions.len() as u64;
 
         let previous_block_hash = previous_block.hash_slow();
 
@@ -356,14 +367,12 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
             total_transactions
         );
 
-        let executor_block_input = V::pre_process_block(&current_block)
-            .with_recovered_senders()
-            .ok_or(HostError::FailedToRecoverSenders)?;
+        let executor_block_input = EthereumVariant::pre_process_block(&current_block)
+            .try_into_recovered()
+            .map_err(|_| HostError::FailedToRecoverSenders)?;
 
         println!("TIMER preprocess block & create RpcDb: {:.3?}", t.elapsed());
         let t = Instant::now();
-
-        let executor_difficulty = current_block.header.difficulty;
 
         // These accumulate across multiple subblocks.
         let mut cumulative_executor_outcomes = ExecutionOutcome::default();
@@ -400,7 +409,7 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
                 "loop count: {:?}, num_transactions_completed: {:?}, all txs num: {:?}, SUBBLOCK_GAS_LIMIT: {}",
                 loop_count,
                 num_transactions_completed as usize,
-                current_block.body.len(),
+                current_block.body.transactions.len(),
                 *SUBBLOCK_GAS_LIMIT
             );
             loop_count += 1;
@@ -408,8 +417,8 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
 
             // Slice the block to only include the transactions that have not been executed yet.
             let mut subblock_input = executor_block_input.clone();
-            subblock_input.body =
-                subblock_input.body[num_transactions_completed as usize..].to_vec();
+            subblock_input.block.body.transactions =
+                subblock_input.body.transactions[num_transactions_completed as usize..].to_vec();
             subblock_input.senders =
                 subblock_input.senders[num_transactions_completed as usize..].to_vec();
 
@@ -424,18 +433,21 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
             subblock_input.starting_gas_used = cumulative_gas_used;
             let starting_gas_used = cumulative_gas_used;
 
-            tracing::info!("num transactions left: {}", subblock_input.body.len());
+            tracing::info!("num transactions left: {}", subblock_input.body().transactions.len());
             println!("TIMER prepare subblock_input slice:  {:.3?}", t_slice.elapsed());
             let t_exec = Instant::now();
 
             // Execute the subblock.
-            let subblock_output = V::execute(&subblock_input, executor_difficulty, cache_db)?;
+            let spec = EthereumVariant::spec();
+            tracing::info!("before cumulative_gas_used = {cumulative_gas_used}");
+            let subblock_output = EthereumVariant::execute(&subblock_input, &spec, cache_db)?;
+            tracing::info!("after gas_used = {}", subblock_output.result.gas_used);
             println!("TIMER execute VM (subblock {})   {:.3?}", loop_count - 1, t_exec.elapsed());
 
             let t_post = Instant::now();
             let num_executed_transactions = subblock_output.receipts.len();
             let upper = num_transactions_completed + num_executed_transactions as u64;
-            let is_last_subblock = upper == current_block.body.len() as u64;
+            let is_last_subblock = upper == current_block.body.transactions.len() as u64;
 
             tracing::info!(
                 "successfully executed subblock: num_transactions_completed={}, upper={}",
@@ -447,7 +459,7 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
             tracing::info!("accumulating the logs bloom");
             let mut logs_bloom = Bloom::default();
             subblock_output.receipts.iter().for_each(|r| {
-                logs_bloom.accrue_bloom(&r.bloom_slow());
+                logs_bloom.accrue_bloom(&r.bloom());
             });
             global_logs_bloom.accrue_bloom(&logs_bloom);
 
@@ -462,15 +474,15 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
 
             // Convert the output to an execution outcome.
             let executor_outcome = ExecutionOutcome::new(
-                subblock_output.state,
-                Receipts::from(subblock_output.receipts),
+                subblock_output.state.clone(),
+                vec![subblock_output.receipts.clone()],
                 current_block.header.number,
-                vec![subblock_output.requests.into()],
+                vec![subblock_output.requests.clone()],
             );
             all_executor_outcomes.push(executor_outcome.clone());
 
             // Save the subblock's `HashedPostState` for debugging.
-            let target_post_state = executor_outcome.hash_state_slow();
+            let target_post_state = executor_outcome.hash_state_slow::<KeccakKeyHasher>();
             state_diffs.push(target_post_state);
 
             // Initialize and set part of the subblock output. The rest will be set later.
@@ -479,7 +491,7 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
                 logs_bloom,
                 output_state_root: B256::default(),
                 input_state_root: B256::default(),
-                requests: vec![],
+                requests: vec![].into(),
             };
             subblock_outputs.push(subblock_output);
 
@@ -494,7 +506,7 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
             all_state_requests.push(subblock_state_requests);
 
             let mut subblock_input = SubblockInput {
-                current_block: V::pre_process_block(&current_block),
+                current_block: EthereumVariant::pre_process_block(&current_block),
                 block_hashes: BTreeMap::new(),
                 bytecodes: rpc_db.get_bytecodes(),
                 is_first_subblock,
@@ -503,9 +515,10 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
             };
 
             // Slice the correct transactions for this subblock
-            subblock_input.current_block.body = subblock_input.current_block.body
-                [num_transactions_completed as usize..upper as usize]
-                .to_vec();
+            subblock_input.current_block.body.transactions =
+                subblock_input.current_block.body.transactions
+                    [num_transactions_completed as usize..upper as usize]
+                    .to_vec();
 
             // Advance subblock.
             num_transactions_completed = upper;
@@ -518,7 +531,7 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
                 loop_count - 1,
                 t_post.elapsed()
             );
-            if num_transactions_completed >= current_block.body.len() as u64 {
+            if num_transactions_completed >= current_block.body.transactions.len() as u64 {
                 break;
             }
         }
@@ -580,7 +593,8 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
             &after_storage_proofs.iter().map(|item| (item.address, item.clone())).collect(),
         )?;
 
-        let cumulative_state_diffs = cumulative_executor_outcomes.hash_state_slow();
+        let cumulative_state_diffs =
+            cumulative_executor_outcomes.hash_state_slow::<KeccakKeyHasher>();
 
         // Update the parent state with the cumulative state diffs from all subblocks.
         let mut mutated_state = parent_state.clone();
@@ -599,17 +613,18 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
         // Note: the receipts root and gas used are verified by `validate_block_post_execution`.
         let mut header = current_block.header.clone();
         header.parent_hash = previous_block_hash;
-        header.ommers_hash = proofs::calculate_ommers_root(&current_block.ommers);
+        header.ommers_hash = proofs::calculate_ommers_root(&current_block.body.ommers);
         header.state_root = current_block.state_root;
-        header.transactions_root = proofs::calculate_transaction_root(&current_block.body);
+        header.transactions_root =
+            proofs::calculate_transaction_root(&current_block.body.transactions);
         header.receipts_root = current_block.header.receipts_root;
         header.withdrawals_root = current_block
+            .body
             .withdrawals
             .clone()
             .map(|w| proofs::calculate_withdrawals_root(w.into_inner().as_slice()));
         header.logs_bloom = global_logs_bloom;
-        header.requests_root =
-            current_block.requests.as_ref().map(|r| proofs::calculate_requests_root(&r.0));
+        header.requests_hash = current_block.header.requests_hash;
 
         // Assert the derived header is correct.
         let constructed_header_hash = header.hash_slow();
@@ -636,16 +651,16 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
         for height in (oldest_ancestor..=(block_number - 1)).rev() {
             let block = self
                 .provider
-                .get_block_by_number(height.into(), false)
+                .get_block_by_number(height.into())
                 .await?
                 .ok_or(HostError::ExpectedBlock(height))?;
 
-            block_hashes.insert(height, block.inner.header.hash);
-            ancestor_headers.push(block.inner.header.try_into()?);
+            block_hashes.insert(height, block.header.hash);
+            ancestor_headers.push(block.header.into());
         }
 
         let aggregation_input = AggregationInput {
-            current_block: V::pre_process_block(&current_block),
+            current_block: EthereumVariant::pre_process_block(&current_block),
             ancestor_headers,
             bytecodes: rpc_db.get_bytecodes(),
         };
@@ -657,7 +672,7 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
         for i in 0..subblock_inputs.len() {
             let input_root = big_state.state_root();
             // Get the touched addresses / storage slots in this subblock.
-            let mut touched_state = HashMap::new();
+            let mut touched_state = HashMap::with_hasher(Default::default());
             for (address, used_keys) in all_state_requests[i].iter() {
                 let modified_keys = all_executor_outcomes[i]
                     .state()
@@ -727,9 +742,9 @@ impl<T: Transport + Clone, P: Provider<T, AnyNetwork> + Clone + 'static> HostExe
             agg_input: aggregation_input,
         };
 
-        #[cfg(debug_assertions)]
+        // NOTE: this is useful for debugging, remove it in production.
         {
-            all_subblock_outputs.validate().map_err(HostError::ClientValidation)?;
+            all_subblock_outputs.validate().expect("host and client outputs are different");
         }
 
         Ok(all_subblock_outputs)

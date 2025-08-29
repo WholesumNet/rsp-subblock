@@ -19,28 +19,33 @@ bincode.workspace = true
 rkyv.workspace = true
 cfg-if.workspace = true
 tracing.workspace = true
+serde_with.workspace = true
 
 # workspace
 rsp-primitives.workspace = true
 rsp-mpt.workspace = true
 
 # reth
+reth-chainspec.workspace = true
 reth-consensus.workspace = true
+reth-errors.workspace = true
 reth-ethereum-consensus.workspace = true
+reth-ethereum-primitives.workspace = true
+reth-evm-ethereum.workspace = true
+reth-evm.workspace = true
 reth-execution-types.workspace = true
+reth-primitives-traits.workspace = true
 reth-primitives.workspace = true
 reth-trie.workspace = true
-reth-evm.workspace = true
-reth-evm-ethereum.workspace = true
-reth-errors.workspace = true
-reth-chainspec.workspace = true
-reth-revm.workspace = true
 
 # revm
-revm.workspace = true
 revm-primitives.workspace = true
+revm.workspace = true
 
 # alloy
+alloy-consensus.workspace = true
+alloy-eips.workspace = true
+alloy-evm.workspace = true
 alloy-primitives.workspace = true
 alloy-rlp.workspace = true
 

@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 /// Client program input data types.
 pub mod io;
 #[macro_use]
@@ -5,31 +7,34 @@ mod utils;
 pub mod custom;
 pub mod error;
 
-use std::{collections::BTreeMap, fmt::Display, io::Cursor, iter::once};
-
+use crate::custom::CustomEvmFactory;
+use alloy_consensus::TxReceipt;
+use alloy_eips::eip7685::Requests;
+use alloy_primitives::Bloom;
 use cfg_if::cfg_if;
-use custom::CustomEvmConfig;
 use error::ClientError;
 use io::{AggregationInput, ClientExecutorInput, SubblockInput, SubblockOutput, TrieDB};
 use itertools::Itertools;
 use reth_chainspec::ChainSpec;
-use reth_errors::{ConsensusError, ProviderError};
+use reth_errors::ConsensusError;
 use reth_ethereum_consensus::{
     validate_block_post_execution as validate_block_post_execution_ethereum,
     validate_subblock_post_execution as validate_subblock_post_execution_ethereum,
 };
-use reth_evm::execute::{
-    BlockExecutionError, BlockExecutionOutput, BlockExecutorProvider, Executor,
+use reth_evm::{
+    execute::{BasicBlockExecutor, BlockExecutionError, BlockExecutionOutput, Executor},
+    Database,
 };
-use reth_evm_ethereum::execute::EthExecutorProvider;
+use reth_evm_ethereum::EthEvmConfig;
 use reth_execution_types::ExecutionOutcome;
-use reth_primitives::{
-    proofs, Block, BlockWithSenders, Bloom, Header, Receipt, Receipts, Request, TransactionSigned,
-};
-use revm::{db::WrapDatabaseRef, Database};
-use revm_primitives::{B256, U256};
+use reth_primitives::{Block, BlockWithSenders, Header, Receipt, TransactionSigned};
+use reth_primitives_traits::{proofs, AlloyBlockHeader, Block as BlockTrait};
+use reth_trie::KeccakKeyHasher;
+use revm::database::WrapDatabaseRef;
+use revm_primitives::B256;
 use rsp_mpt::EthereumState;
 use sha2::{Digest, Sha256};
+use std::{collections::BTreeMap, io::Cursor, iter::once, sync::Arc};
 
 /// Chain ID for Ethereum Mainnet.
 pub const CHAIN_ID_ETH_MAINNET: u64 = 0x1;
@@ -52,26 +57,24 @@ pub struct ClientExecutor;
 pub trait Variant {
     fn spec() -> ChainSpec;
 
-    fn execute<DB>(
+    fn execute<DB: Database>(
         executor_block_input: &BlockWithSenders,
-        executor_difficulty: U256,
+        chain_spec: &ChainSpec,
         cache_db: DB,
-    ) -> Result<BlockExecutionOutput<Receipt>, BlockExecutionError>
-    where
-        DB: Database<Error: Into<ProviderError> + Display>;
+    ) -> Result<BlockExecutionOutput<Receipt>, BlockExecutionError>;
 
     fn validate_block_post_execution(
         block: &BlockWithSenders,
         chain_spec: &ChainSpec,
         receipts: &[Receipt],
-        requests: &[Request],
+        requests: &Requests,
     ) -> Result<(), ConsensusError>;
 
     fn validate_subblock_aggregation(
         _header: &Header,
         _chain_spec: &ChainSpec,
         _receipts: &[Receipt],
-        _requests: &[Request],
+        _requests: &Requests,
     ) -> Result<(), ConsensusError> {
         unimplemented!()
     }
@@ -118,13 +121,11 @@ impl ClientExecutor {
             input
                 .current_block
                 .clone()
-                .with_recovered_senders()
-                .ok_or(ClientError::SignatureRecoveryFailed)
+                .try_into_recovered()
+                .map_err(|_| ClientError::SignatureRecoveryFailed)
         })?;
-        let executor_difficulty = input.current_block.header.difficulty;
-        let executor_output = profile!("execute", {
-            V::execute(&executor_block_input, executor_difficulty, wrap_ref)
-        })?;
+        let executor_output =
+            profile!("execute", { V::execute(&executor_block_input, &spec, wrap_ref) })?;
 
         // Validate the block post execution.
         profile!("validate block post-execution", {
@@ -140,21 +141,21 @@ impl ClientExecutor {
         let mut logs_bloom = Bloom::default();
         profile!("accrue logs bloom", {
             executor_output.receipts.iter().for_each(|r| {
-                logs_bloom.accrue_bloom(&r.bloom_slow());
+                logs_bloom.accrue_bloom(&r.bloom());
             })
         });
 
         // Convert the output to an execution outcome.
         let executor_outcome = ExecutionOutcome::new(
             executor_output.state,
-            Receipts::from(executor_output.receipts),
+            vec![executor_output.result.receipts],
             input.current_block.header.number,
-            vec![executor_output.requests.into()],
+            vec![executor_output.result.requests],
         );
 
         // Verify the state root.
         let state_root = profile!("compute state root", {
-            input.parent_state.update(&executor_outcome.hash_state_slow());
+            input.parent_state.update(&executor_outcome.hash_state_slow::<KeccakKeyHasher>());
             input.parent_state.state_root()
         });
 
@@ -165,20 +166,29 @@ impl ClientExecutor {
         // Derive the block header.
         //
         // Note: the receipts root and gas used are verified by `validate_block_post_execution`.
-        let mut header = input.current_block.header.clone();
-        header.parent_hash = input.parent_header().hash_slow();
-        header.ommers_hash = proofs::calculate_ommers_root(&input.current_block.ommers);
-        header.state_root = input.current_block.state_root;
-        header.transactions_root = proofs::calculate_transaction_root(&input.current_block.body);
-        header.receipts_root = input.current_block.header.receipts_root;
-        header.withdrawals_root = input
-            .current_block
-            .withdrawals
-            .take()
-            .map(|w| proofs::calculate_withdrawals_root(w.into_inner().as_slice()));
-        header.logs_bloom = logs_bloom;
-        header.requests_root =
-            input.current_block.requests.as_ref().map(|r| proofs::calculate_requests_root(&r.0));
+        let header = Header {
+            parent_hash: input.current_block.header().parent_hash(),
+            ommers_hash: input.current_block.header().ommers_hash(),
+            beneficiary: input.current_block.header().beneficiary(),
+            state_root,
+            transactions_root: input.current_block.header().transactions_root(),
+            receipts_root: input.current_block.header().receipts_root(),
+            logs_bloom: input.current_block.logs_bloom,
+            difficulty: input.current_block.header().difficulty(),
+            number: input.current_block.header().number(),
+            gas_limit: input.current_block.header().gas_limit(),
+            gas_used: input.current_block.header().gas_used(),
+            timestamp: input.current_block.header().timestamp(),
+            extra_data: input.current_block.header().extra_data().clone(),
+            mix_hash: input.current_block.header().mix_hash().unwrap(),
+            nonce: input.current_block.header().nonce().unwrap(),
+            base_fee_per_gas: input.current_block.header().base_fee_per_gas(),
+            withdrawals_root: input.current_block.header().withdrawals_root(),
+            blob_gas_used: input.current_block.header().blob_gas_used(),
+            excess_blob_gas: input.current_block.header().excess_blob_gas(),
+            parent_beacon_block_root: input.current_block.header().parent_beacon_block_root(),
+            requests_hash: input.current_block.header().requests_hash(),
+        };
 
         Ok(header)
     }
@@ -202,29 +212,28 @@ impl ClientExecutor {
         });
 
         // Execute the block.
+        let spec = V::spec();
         let mut executor_block_input = profile!("recover senders", {
             input
                 .current_block
                 .clone()
-                .with_recovered_senders()
-                .ok_or(ClientError::SignatureRecoveryFailed)
+                .try_into_recovered()
+                .map_err(|_| ClientError::SignatureRecoveryFailed)
         })?;
         executor_block_input.is_first_subblock = input.is_first_subblock;
         executor_block_input.is_last_subblock = input.is_last_subblock;
         executor_block_input.starting_gas_used = input.starting_gas_used;
-
-        let executor_difficulty = input.current_block.header.difficulty;
-        let executor_output = profile!("execute", {
-            V::execute(&executor_block_input, executor_difficulty, wrap_ref)
-        })?;
+        let executor_output =
+            profile!("execute", { V::execute(&executor_block_input, &spec, wrap_ref) })?;
 
         let requests = executor_output.requests.clone();
         let receipts = executor_output.receipts.clone();
 
+        // Accumulate the logs bloom.
         let mut logs_bloom = Bloom::default();
         profile!("accrue logs bloom", {
             executor_output.receipts.iter().for_each(|r| {
-                logs_bloom.accrue_bloom(&r.bloom_slow());
+                logs_bloom.accrue_bloom(&r.bloom());
             })
         });
 
@@ -232,12 +241,15 @@ impl ClientExecutor {
             // Convert the output to an execution outcome.
             let executor_outcome = ExecutionOutcome::new(
                 executor_output.state,
-                Receipts::from(executor_output.receipts),
+                vec![executor_output.result.receipts],
                 input.current_block.header.number,
-                vec![executor_output.requests.into()],
+                vec![executor_output.result.requests],
             );
 
-            let hash_state = executor_outcome.hash_state_slow();
+            let mut hash_state = executor_outcome.hash_state_slow::<KeccakKeyHasher>();
+            // TRICKY: reth may return empty accounts, they must be deleted in the hash state,
+            // otherwise the output state root was wrong.
+            hash_state.accounts.retain(|_, v| v.map(|acc| !acc.is_empty()).unwrap_or(false));
 
             // Get the output state root by applying the diff to the input state.
             input_state.update(&hash_state);
@@ -317,16 +329,16 @@ impl ClientExecutor {
                     aggregation_input.current_block.header
                 );
                 assert_eq!(
-                    subblock_input.current_block.ommers,
-                    aggregation_input.current_block.ommers
+                    subblock_input.current_block.body.ommers,
+                    aggregation_input.current_block.body.ommers
                 );
                 assert_eq!(
-                    subblock_input.current_block.withdrawals,
-                    aggregation_input.current_block.withdrawals
+                    subblock_input.current_block.body.withdrawals,
+                    aggregation_input.current_block.body.withdrawals
                 );
                 assert_eq!(
-                    subblock_input.current_block.requests,
-                    aggregation_input.current_block.requests
+                    subblock_input.current_block.header.requests_hash,
+                    aggregation_input.current_block.header.requests_hash
                 );
                 println!("cycle-tracker-start: deserialize subblock output");
 
@@ -342,7 +354,7 @@ impl ClientExecutor {
                 cumulative_state_diff.extend(subblock_output);
 
                 // Also add this subblock's transaction body to the transaction body.
-                transaction_body.extend(subblock_input.current_block.body);
+                transaction_body.extend(subblock_input.current_block.body.transactions);
                 println!("cycle-tracker-end: extend state");
             }
         });
@@ -366,7 +378,7 @@ impl ClientExecutor {
 
         // Check that the subblock transactions match the main block transactions.
         assert_eq!(
-            transaction_body, aggregation_input.current_block.body,
+            transaction_body, aggregation_input.current_block.body.transactions,
             "subblock transactions do not match main block transactions"
         );
 
@@ -399,22 +411,20 @@ impl ClientExecutor {
         // Note: the receipts root and gas used are verified by `validate_subblock_aggregation`.
         let mut header = aggregation_input.current_block.header.clone();
         header.parent_hash = aggregation_input.parent_header().hash_slow();
-        header.ommers_hash = proofs::calculate_ommers_root(&aggregation_input.current_block.ommers);
+        header.ommers_hash =
+            proofs::calculate_ommers_root(&aggregation_input.current_block.body.ommers);
         header.state_root = aggregation_input.current_block.state_root;
         header.transactions_root =
-            proofs::calculate_transaction_root(&aggregation_input.current_block.body);
+            proofs::calculate_transaction_root(&aggregation_input.current_block.body.transactions);
         header.receipts_root = aggregation_input.current_block.header.receipts_root;
         header.withdrawals_root = aggregation_input
             .current_block
+            .body
             .withdrawals
             .take()
             .map(|w| proofs::calculate_withdrawals_root(w.into_inner().as_slice()));
         header.logs_bloom = cumulative_state_diff.logs_bloom;
-        header.requests_root = aggregation_input
-            .current_block
-            .requests
-            .as_ref()
-            .map(|r| proofs::calculate_requests_root(&r.0));
+        header.requests_hash = aggregation_input.current_block.header.requests_hash;
 
         Ok(header)
     }
@@ -425,27 +435,23 @@ impl Variant for EthereumVariant {
         rsp_primitives::chain_spec::mainnet()
     }
 
-    fn execute<DB>(
+    fn execute<DB: Database>(
         executor_block_input: &BlockWithSenders,
-        executor_difficulty: U256,
+        chain_spec: &ChainSpec,
         cache_db: DB,
-    ) -> Result<BlockExecutionOutput<Receipt>, BlockExecutionError>
-    where
-        DB: Database<Error: Into<ProviderError> + Display>,
-    {
-        EthExecutorProvider::new(
-            Self::spec().into(),
-            CustomEvmConfig::from_variant(ChainVariant::Ethereum),
-        )
-        .executor(cache_db)
-        .execute((executor_block_input, executor_difficulty).into())
+    ) -> Result<BlockExecutionOutput<Receipt>, BlockExecutionError> {
+        let evm_config = EthEvmConfig::new_with_evm_factory(
+            Arc::new(chain_spec.clone()),
+            CustomEvmFactory::new(None),
+        );
+        BasicBlockExecutor::new(evm_config, cache_db).execute(executor_block_input)
     }
 
     fn validate_block_post_execution(
         block: &BlockWithSenders,
         chain_spec: &ChainSpec,
         receipts: &[Receipt],
-        requests: &[Request],
+        requests: &Requests,
     ) -> Result<(), ConsensusError> {
         validate_block_post_execution_ethereum(block, chain_spec, receipts, requests)
     }
@@ -454,7 +460,7 @@ impl Variant for EthereumVariant {
         header: &Header,
         chain_spec: &ChainSpec,
         receipts: &[Receipt],
-        requests: &[Request],
+        requests: &Requests,
     ) -> Result<(), ConsensusError> {
         validate_subblock_post_execution_ethereum(header, chain_spec, receipts, requests)
     }

@@ -1,5 +1,4 @@
-use reth_primitives::Bloom;
-use revm_primitives::B256;
+use alloy_primitives::{Bloom, B256};
 
 #[derive(
     Clone,
