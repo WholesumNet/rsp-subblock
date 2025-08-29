@@ -3553,7 +3553,7 @@ dependencies = [
 [[package]]
 name = "pico-derive"
 version = "0.1.0"
-source = "git+ssh://git@github.com/brevis-network/brevis-vm.git#71bc41a7a012f291e12b0ad72eae196105e197d8"
+source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=temp-defer-proof#91836635f10ae1ddc201da1cdf06c54f68dab73c"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3563,7 +3563,7 @@ dependencies = [
 [[package]]
 name = "pico-patch-libs"
 version = "1.1.6"
-source = "git+ssh://git@github.com/brevis-network/brevis-vm.git#71bc41a7a012f291e12b0ad72eae196105e197d8"
+source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=temp-defer-proof#91836635f10ae1ddc201da1cdf06c54f68dab73c"
 dependencies = [
  "bincode",
  "serde",
@@ -3581,7 +3581,7 @@ dependencies = [
 [[package]]
 name = "pico-sdk"
 version = "1.1.6"
-source = "git+ssh://git@github.com/brevis-network/brevis-vm.git#71bc41a7a012f291e12b0ad72eae196105e197d8"
+source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=temp-defer-proof#91836635f10ae1ddc201da1cdf06c54f68dab73c"
 dependencies = [
  "anyhow",
  "bincode",
@@ -3596,7 +3596,7 @@ dependencies = [
  "p3-field",
  "p3-koala-bear",
  "p3-mersenne-31",
- "pico-patch-libs 1.1.6 (git+ssh://git@github.com/brevis-network/brevis-vm.git)",
+ "pico-patch-libs 1.1.6 (git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=temp-defer-proof)",
  "pico-vm",
  "rand 0.8.5",
  "serde",
@@ -3607,7 +3607,7 @@ dependencies = [
 [[package]]
 name = "pico-vm"
 version = "1.1.6"
-source = "git+ssh://git@github.com/brevis-network/brevis-vm.git#71bc41a7a012f291e12b0ad72eae196105e197d8"
+source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=temp-defer-proof#91836635f10ae1ddc201da1cdf06c54f68dab73c"
 dependencies = [
  "anyhow",
  "arrayref",
@@ -4748,7 +4748,7 @@ dependencies = [
  "bincode",
  "cfg-if",
  "itertools 0.13.0",
- "pico-patch-libs 1.1.6 (git+ssh://git@github.com/brevis-network/brevis-vm.git)",
+ "pico-patch-libs 1.1.6 (git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=temp-defer-proof)",
  "pico-sdk",
  "reth-chainspec",
  "reth-consensus",
