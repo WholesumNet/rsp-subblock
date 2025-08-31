@@ -3552,30 +3552,11 @@ dependencies = [
 [[package]]
 name = "pico-derive"
 version = "0.1.0"
-source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=temp-defer-proof#91836635f10ae1ddc201da1cdf06c54f68dab73c"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "pico-derive"
-version = "0.1.0"
 source = "git+ssh://git@github.com/brevis-network/brevis-vm.git#3c21ebb6ee4165f65c2e9a6b06f625a862ba12d3"
 dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
-]
-
-[[package]]
-name = "pico-patch-libs"
-version = "1.1.6"
-source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=temp-defer-proof#91836635f10ae1ddc201da1cdf06c54f68dab73c"
-dependencies = [
- "bincode",
- "serde",
 ]
 
 [[package]]
@@ -3599,32 +3580,6 @@ dependencies = [
 [[package]]
 name = "pico-sdk"
 version = "1.1.6"
-source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=temp-defer-proof#91836635f10ae1ddc201da1cdf06c54f68dab73c"
-dependencies = [
- "anyhow",
- "bincode",
- "cfg-if",
- "env_logger",
- "getrandom 0.2.15",
- "hex",
- "lazy_static",
- "log",
- "p3-baby-bear",
- "p3-challenger",
- "p3-field",
- "p3-koala-bear",
- "p3-mersenne-31",
- "pico-patch-libs 1.1.6 (git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=temp-defer-proof)",
- "pico-vm 1.1.6 (git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=temp-defer-proof)",
- "rand 0.8.5",
- "serde",
- "serde_json",
- "sha2 0.10.9",
-]
-
-[[package]]
-name = "pico-sdk"
-version = "1.1.6"
 source = "git+ssh://git@github.com/brevis-network/brevis-vm.git#3c21ebb6ee4165f65c2e9a6b06f625a862ba12d3"
 dependencies = [
  "anyhow",
@@ -3641,96 +3596,11 @@ dependencies = [
  "p3-koala-bear",
  "p3-mersenne-31",
  "pico-patch-libs 1.1.6 (git+ssh://git@github.com/brevis-network/brevis-vm.git)",
- "pico-vm 1.1.6 (git+ssh://git@github.com/brevis-network/brevis-vm.git)",
+ "pico-vm",
  "rand 0.8.5",
  "serde",
  "serde_json",
  "sha2 0.10.9",
-]
-
-[[package]]
-name = "pico-vm"
-version = "1.1.6"
-source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=temp-defer-proof#91836635f10ae1ddc201da1cdf06c54f68dab73c"
-dependencies = [
- "anyhow",
- "arrayref",
- "backtrace",
- "bincode",
- "bytemuck",
- "cfg-if",
- "clap",
- "core_affinity",
- "cpu-time",
- "crossbeam",
- "csv",
- "curve25519-dalek",
- "dashmap",
- "dashu",
- "derive_more 2.0.1",
- "elf",
- "elliptic-curve",
- "eyre",
- "ff 0.13.0",
- "halo2curves",
- "hashbrown 0.14.5",
- "hex",
- "hybrid-array",
- "itertools 0.13.0",
- "k256",
- "lazy_static",
- "log",
- "num",
- "num-bigint 0.4.6",
- "num-traits",
- "num_cpus",
- "once_cell",
- "p256",
- "p3-air",
- "p3-baby-bear",
- "p3-blake3",
- "p3-bn254-fr",
- "p3-challenger",
- "p3-circle",
- "p3-commit",
- "p3-dft",
- "p3-field",
- "p3-fri",
- "p3-goldilocks",
- "p3-keccak",
- "p3-keccak-air",
- "p3-koala-bear",
- "p3-matrix",
- "p3-maybe-rayon",
- "p3-mds",
- "p3-merkle-tree",
- "p3-mersenne-31",
- "p3-poseidon2",
- "p3-symmetric",
- "p3-uni-stark",
- "p3-util",
- "paste",
- "pico-derive 0.1.0 (git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=temp-defer-proof)",
- "rand 0.8.5",
- "rayon",
- "rayon-scan",
- "rrs-succinct",
- "serde",
- "serde_json",
- "serde_with",
- "snowbridge-amcl",
- "static_assertions",
- "strum 0.26.3",
- "strum_macros 0.26.4",
- "sysinfo",
- "thiserror 1.0.69",
- "tiny-keccak",
- "tracing",
- "tracing-forest",
- "tracing-subscriber 0.3.19",
- "typenum",
- "vec_map",
- "zkhash",
 ]
 
 [[package]]
@@ -3795,7 +3665,7 @@ dependencies = [
  "p3-uni-stark",
  "p3-util",
  "paste",
- "pico-derive 0.1.0 (git+ssh://git@github.com/brevis-network/brevis-vm.git)",
+ "pico-derive",
  "rand 0.8.5",
  "rayon",
  "rayon-scan",
@@ -4853,7 +4723,7 @@ version = "0.0.0"
 dependencies = [
  "alloy-primitives",
  "log",
- "pico-sdk 1.1.6 (git+ssh://git@github.com/brevis-network/brevis-vm.git)",
+ "pico-sdk",
  "rsp-client-executor",
  "tracing",
 ]
@@ -4870,8 +4740,8 @@ dependencies = [
  "bincode",
  "cfg-if",
  "itertools 0.13.0",
- "pico-patch-libs 1.1.6 (git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=temp-defer-proof)",
- "pico-sdk 1.1.6 (git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=temp-defer-proof)",
+ "pico-patch-libs 1.1.6 (git+ssh://git@github.com/brevis-network/brevis-vm.git)",
+ "pico-sdk",
  "reth-chainspec",
  "reth-consensus",
  "reth-errors",
