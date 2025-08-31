@@ -236,7 +236,7 @@ impl<P: Provider<N> + Clone, N: Network> DatabaseRef for RpcDb<P, N> {
             tokio::task::block_in_place(|| handle.block_on(self.fetch_account_info(address)));
         let account_info =
             result.map_err(|e| ProviderError::Database(DatabaseError::Other(e.to_string())))?;
-        Ok(Some(account_info))
+        Ok((!account_info.is_empty()).then_some(account_info))
     }
 
     fn code_by_hash_ref(&self, _code_hash: B256) -> Result<Bytecode, Self::Error> {
