@@ -250,7 +250,11 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
         tracing::info!("verifying the state root");
         let state_root = {
             let mut mutated_state = state.clone();
-            mutated_state.update(&executor_outcome.hash_state_slow::<KeccakKeyHasher>());
+            let mut hash_state = executor_outcome.hash_state_slow::<KeccakKeyHasher>();
+            // TRICKY: reth may return empty accounts, they must be deleted in the hash state,
+            // otherwise the output state root was wrong.
+            hash_state.accounts.retain(|_, v| v.map(|acc| !acc.is_empty()).unwrap_or(false));
+            mutated_state.update(&hash_state);
             mutated_state.state_root()
         };
         if state_root != current_block.state_root {
@@ -593,8 +597,13 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
             &after_storage_proofs.iter().map(|item| (item.address, item.clone())).collect(),
         )?;
 
-        let cumulative_state_diffs =
+        let mut cumulative_state_diffs =
             cumulative_executor_outcomes.hash_state_slow::<KeccakKeyHasher>();
+        // TRICKY: reth may return empty accounts, they must be deleted in the hash state,
+        // otherwise the output state root was wrong.
+        cumulative_state_diffs
+            .accounts
+            .retain(|_, v| v.map(|acc| !acc.is_empty()).unwrap_or(false));
 
         // Update the parent state with the cumulative state diffs from all subblocks.
         let mut mutated_state = parent_state.clone();
@@ -721,6 +730,9 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
                 rkyv::to_bytes::<rkyv::rancor::Error>(&subblock_parent_state).unwrap().to_vec(),
             );
 
+            // TRICKY: reth may return empty accounts, they must be deleted in the hash state,
+            // otherwise the output state root was wrong.
+            state_diffs[i].accounts.retain(|_, v| v.map(|acc| !acc.is_empty()).unwrap_or(false));
             // Update the big state with the state diff of this subblock, and set the fields of this
             // subblock's input/output accordingly.
             big_state.update(&state_diffs[i]);

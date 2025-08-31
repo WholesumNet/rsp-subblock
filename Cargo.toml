@@ -187,3 +187,26 @@ rustdoc.all = "warn"
 
 [patch.crates-io]
 foldhash = { git = "ssh://git@github.com/brevis-network/foldhash.git", branch = "pico" }
+revm = { git = "ssh://git@github.com/brevis-network/revm.git", branch = "pico" }
+revm-bytecode = { git = "ssh://git@github.com/brevis-network/revm.git", branch = "pico" }
+revm-context = { git = "ssh://git@github.com/brevis-network/revm.git", branch = "pico" }
+revm-database = { git = "ssh://git@github.com/brevis-network/revm.git", branch = "pico" }
+revm-database-interface = { git = "ssh://git@github.com/brevis-network/revm.git", branch = "pico" }
+revm-handler = { git = "ssh://git@github.com/brevis-network/revm.git", branch = "pico" }
+revm-inspector = { git = "ssh://git@github.com/brevis-network/revm.git", branch = "pico" }
+revm-interpreter = { git = "ssh://git@github.com/brevis-network/revm.git", branch = "pico" }
+revm-precompile = { git = "ssh://git@github.com/brevis-network/revm.git", branch = "pico" }
+revm-primitives = { git = "ssh://git@github.com/brevis-network/revm.git", branch = "pico" }
+revm-state = { git = "ssh://git@github.com/brevis-network/revm.git", branch = "pico" }
+# debug on local
+# revm = { path = "../revm/crates/revm" }
+# revm-state = { path = "../revm/crates/state" }
+# revm-database = { path = "../revm/crates/database" }
+# revm-handler = { path = "../revm/crates/handler" }
+# revm-interpreter = { path = "../revm/crates/interpreter" }
+# revm-inspector = { path = "../revm/crates/inspector" }
+# revm-precompile = { path = "../revm/crates/precompile" }
+# revm-bytecode = { path = "../revm/crates/bytecode" }
+# revm-context = { path = "../revm/crates/context" }
+# revm-primitives = { path = "../revm/crates/primitives" }
+# revm-database-interface = { path = "../revm/crates/database/interface" }
