@@ -243,14 +243,11 @@ impl<'a> TrieDB<'a> {
     ) -> Result<Option<AccountInfo>, <Self as DatabaseRef>::Error> {
         let account_in_trie = self.inner.state_trie.get_rlp::<TrieAccount>(hashed_address).unwrap();
 
-        let account = account_in_trie.and_then(|account_in_trie| {
-            let acc = AccountInfo {
-                balance: account_in_trie.balance,
-                nonce: account_in_trie.nonce,
-                code_hash: account_in_trie.code_hash,
-                code: None,
-            };
-            (!acc.is_empty()).then_some(acc)
+        let account = account_in_trie.map(|account_in_trie| AccountInfo {
+            balance: account_in_trie.balance,
+            nonce: account_in_trie.nonce,
+            code_hash: account_in_trie.code_hash,
+            code: None,
         });
 
         Ok(account)
