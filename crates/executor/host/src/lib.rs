@@ -491,7 +491,7 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
                 logs_bloom,
                 output_state_root: B256::default(),
                 input_state_root: B256::default(),
-                requests: vec![].into(),
+                requests: subblock_output.requests.clone(),
             };
             subblock_outputs.push(subblock_output);
 
