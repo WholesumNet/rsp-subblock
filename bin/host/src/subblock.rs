@@ -10,7 +10,10 @@ use clap::Parser;
 use pico_sdk::{client::DefaultProverClient, init_logger, load_elf, HashableKey};
 use rsp_client_executor::{io::SubblockHostOutput, ChainVariant};
 use rsp_host_executor::HostExecutor;
-use std::{path::PathBuf, time::Instant};
+use std::{env, fs::File, io::BufWriter, path::PathBuf, time::Instant};
+use tracing_subscriber::{
+    filter::EnvFilter, fmt, prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt,
+};
 
 mod cli;
 use cli::ProviderArgs;
@@ -37,6 +40,22 @@ struct HostArgs {
     /// created from RPC data if it doesn't already exist.
     #[clap(long)]
     cache_dir: Option<PathBuf>,
+}
+
+fn resolve_dump_dir(dump_dir: Option<&PathBuf>, block_number: u64) -> PathBuf {
+    let gas_segment = match env::var("SUBBLOCK_GAS_LIMIT")
+        .ok()
+        .and_then(|s| s.parse::<u64>().ok())
+    {
+        Some(g) => format!("gas{}", g),
+        None => "gasUNSET".to_string(),
+    };
+
+    let base = dump_dir
+        .cloned()
+        .unwrap_or_else(|| PathBuf::from("."));
+
+    base.join(format!("block{}", block_number)).join(gas_segment)
 }
 
 #[tokio::main]
@@ -157,6 +176,9 @@ async fn schedule_subblock_execution(
     dump_dir: Option<PathBuf>,
 ) -> eyre::Result<()> {
     let t_dump = Instant::now();
+    let out_dir = resolve_dump_dir(dump_dir.as_ref(), _block_number);
+    std::fs::create_dir_all(&out_dir)?;
+    tracing::info!("Dump directory: {}", out_dir.display());
     // let (subblock_elf, subblock_vk) = (subblock_pk.elf, subblock_pk.vk);
     // let agg_elf = agg_pk.elf;
     //
@@ -182,8 +204,8 @@ async fn schedule_subblock_execution(
     );
 
     let t = Instant::now();
-    let mut riscv_proofs = Vec::new();
-    let mut combine_proofs = Vec::new();
+    // let mut riscv_proofs = Vec::new();
+    // let mut combine_proofs = Vec::new();
     let subblock_vk = subblock_client.riscv_vk().clone();
 
     for i in 0..inputs.subblock_inputs.len() {
@@ -194,26 +216,29 @@ async fn schedule_subblock_execution(
         let mut stdin_builder = subblock_client.new_stdin_builder();
         stdin_builder.write(input);
         stdin_builder.write_slice(parent_state);
+        let filename = format!("subblock_stdin_builder_{}.bin", i);
+        let f = BufWriter::new(File::create(out_dir.join(&filename))?);
+        bincode::serialize_into(f, &stdin_builder)?;
 
         // Save the elf/stdin pair to the dump directory.
-        if let Some(dump_dir) = dump_dir.as_ref() {
-            let stdin_dir_path = dump_dir.join("subblock_stdins");
-            std::fs::create_dir_all(&stdin_dir_path)?;
-            let stdin_path = stdin_dir_path.join(format!("{}.bin", i));
-            std::fs::write(stdin_path, bincode::serialize(&stdin_builder)?)?;
-        }
+        // if let Some(dump_dir) = dump_dir.as_ref() {
+        //     let stdin_dir_path = dump_dir.join("subblock_stdins");
+        //     std::fs::create_dir_all(&stdin_dir_path)?;
+        //     let stdin_path = stdin_dir_path.join(format!("{}.bin", i));
+        //     std::fs::write(stdin_path, bincode::serialize(&stdin_builder)?)?;
+        // }
 
         // TODO: use prove flag
         // Generate proof
-        let start = Instant::now();
-        let (riscv_proof, combine_proof) =
-            subblock_client.prove_combine(stdin_builder.clone()).expect("Failed to generate proof");
-        let elapsed = start.elapsed().as_secs_f64();
+        // let start = Instant::now();
+        // let (riscv_proof, combine_proof) =
+        //     subblock_client.prove_combine(stdin_builder.clone()).expect("Failed to generate proof");
+        // let elapsed = start.elapsed().as_secs_f64();
 
-        tracing::info!("Subblock {}: prove duration: {:?}", i, elapsed,);
+        // tracing::info!("Subblock {}: prove duration: {:?}", i, elapsed,);
 
-        riscv_proofs.push(riscv_proof);
-        combine_proofs.push(combine_proof);
+        // riscv_proofs.push(riscv_proof);
+        // combine_proofs.push(combine_proof);
 
         if execute {
             let start = Instant::now();
@@ -272,24 +297,37 @@ async fn schedule_subblock_execution(
     //     rkyv::from_bytes::<EthereumState, rkyv::rancor::BoxedError>(&aligned_vec).unwrap();
     // let parent_state_root = parent_state.state_root();
 
+    dump_agg_stdin_to_files(
+        &public_values,
+        &subblock_client.riscv_vk().hash_u32(),
+        &subblock_host_output.agg_input,
+        &out_dir
+    );
     stdin_builder.write::<Vec<Vec<u8>>>(&public_values);
     stdin_builder.write::<[u32; 8]>(&subblock_client.riscv_vk().hash_u32());
     stdin_builder.write(&subblock_host_output.agg_input);
     stdin_builder.write(&subblock_host_output.agg_input.parent_header().state_root);
-    assert_eq!(riscv_proofs.len(), combine_proofs.len());
-    for i in 0..riscv_proofs.len() {
-        stdin_builder.write_pico_proof(combine_proofs[i].clone(), subblock_vk.clone());
-    }
+
+    let f = BufWriter::new(File::create(out_dir.join("aggregator_stdin_builder.bin"))?);
+    bincode::serialize_into(f, &stdin_builder)?;
+    // assert_eq!(riscv_proofs.len(), combine_proofs.len());
+    // for i in 0..riscv_proofs.len() {
+    //     stdin_builder.write_pico_proof(combine_proofs[i].clone(), subblock_vk.clone());
+    // }
+
+    let f = BufWriter::new(File::create(out_dir.join("final_aggregator_stdin_builder.bin"))?);
+    bincode::serialize_into(f, &stdin_builder)?;
+
     println!("TIMER aggregator stdin: {:?}", t_agg_stdin.elapsed());
 
-    let start = Instant::now();
+    // let start = Instant::now();
     // Execute the aggregation program with deferred proof verification off, since we don't have the
     // proof yet.
-    let (_agg_riscv_proof, _agg_combine_proof) =
-        agg_client.prove_combine(stdin_builder.clone()).expect("Failed to generate proof");
-    let elapsed = start.elapsed().as_secs_f64();
-
-    tracing::info!("Aggregator: prove duration: {:?}", elapsed,);
+    // let (_agg_riscv_proof, _agg_combine_proof) =
+    //     agg_client.prove_combine(stdin_builder.clone()).expect("Failed to generate proof");
+    // let elapsed = start.elapsed().as_secs_f64();
+    //
+    // tracing::info!("Aggregator: prove duration: {:?}", elapsed,);
 
     if execute {
         let start = Instant::now();
@@ -359,6 +397,40 @@ async fn schedule_subblock_execution(
 //     stdin_builder.write(&subblock_host_output.agg_input.parent_header().state_root);
 //     stdin_builder
 // }
+
+use bincode;
+use rsp_client_executor::io::AggregationInput;
+use serde::Serialize;
+use std::io::Write;
+use std::path::Path;
+
+fn dump_agg_stdin_to_files(
+    public_values: &Vec<Vec<u8>>,
+    vk_digest: &[u32; 8],
+    agg_input: &AggregationInput,
+    out_dir: &Path
+) -> std::io::Result<()> {
+    // ensure directory exists
+    std::fs::create_dir_all(out_dir)?;
+
+    // 1. public_values
+    let bytes = bincode::serialize(public_values).unwrap();
+    File::create(out_dir.join("public_values.bin"))?.write_all(&bytes)?;
+
+    // 2. vk_digest
+    let bytes = bincode::serialize(vk_digest).unwrap();
+    File::create(out_dir.join("vk_digest.bin"))?.write_all(&bytes)?;
+
+    // 3. agg_input
+    let bytes = bincode::serialize(agg_input).unwrap();
+    File::create(out_dir.join("agg_input.bin"))?.write_all(&bytes)?;
+
+    // 4. state_root
+    let bytes = bincode::serialize(&agg_input.parent_header().state_root).unwrap();
+    File::create(out_dir.join("state_root.bin"))?.write_all(&bytes)?;
+
+    Ok(())
+}
 
 fn try_load_input_from_cache(
     cache_dir: Option<&PathBuf>,

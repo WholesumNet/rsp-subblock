@@ -4,8 +4,8 @@ set -euo pipefail
 # --------- Configuration ---------
 export RUST_BACKTRACE=full
 export CHUNK_SIZE=4194304
-export CHUNK_BATCH_SIZE=16
-export SPLIT_THRESHOLD=32768
+export CHUNK_BATCH_SIZE=8
+export SPLIT_THRESHOLD=1048576
 export RUSTFLAGS="-C target-cpu=native -C target-feature=+avx512f,+avx512ifma,+avx512vl"
 export VK_VERIFICATION=true
 
@@ -32,19 +32,27 @@ BLOCK_NUMBERS=(
   23044002
   23042747
   23043634
+  22306669
+  22306851
+  22307242
+  21926929
+  23139575
+  23135799
+  23139688
 )
 
 CHAIN_ID=1
 RPC_URL=
 # GAS_LIMITS=(16000000 8000000 1000000)
 # GAS_LIMITS=(1000000 2000000 4000000 8000000)
-GAS_LIMITS=(8000000)
+# GAS_LIMITS=(7000000 8000000 9000000 10000000)
+GAS_LIMITS=(7000000 10000000)
 DUMP_DIR=./dump_dir
 CACHE_DIR=./cache_dir
 LOG_DIR=./logs
 # RUST_LOG_LEVEL="info,pico_sdk=debug,pico_vm=debug,rsp_host_executor=info,rsp_client_executor=info,alloy_provider=warn"
 # RUST_LOG_LEVEL=debug
-RUST_LOG_LEVEL=info
+RUST_LOG_LEVEL=debug
 # RUST_LOG="info,pico_sdk=debug,pico_vm=info,rsp_host_executor=info,rsp_client_executor=info,alloy_provider=warn"
 
 # --------------------------------
@@ -60,13 +68,12 @@ for BLOCK_NUMBER in "${BLOCK_NUMBERS[@]}"; do
 
     echo "[$(date '+%F %T')] RUN SUBBLOCK_GAS_LIMIT=${GAS} -> $log_file"
 
-    RUST_LOG="$RUST_LOG_LEVEL" cargo run -r --bin subblock -- \
+    RUST_LOG="$RUST_LOG_LEVEL" cargo run --release --bin subblock -- \
       --block-number "$BLOCK_NUMBER" \
       --chain-id "$CHAIN_ID" \
-      --rpc-url "$RPC_URL" \
       --dump-dir "$DUMP_DIR" \
-      --cache-dir "$CACHE_DIR" \
       --execute \
       2>&1 | tee "$log_file"
+      # --cache-dir "$CACHE_DIR" \
   done
 done
