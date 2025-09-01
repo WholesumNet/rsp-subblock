@@ -8,7 +8,6 @@ export CHUNK_BATCH_SIZE=8
 export SPLIT_THRESHOLD=1048576
 export RUSTFLAGS="-C target-cpu=native -C target-feature=+avx512f,+avx512ifma,+avx512vl"
 export VK_VERIFICATION=true
-BLOCK_NUMBER=21926929
 
 BLOCK_NUMBERS=(
   23043570
@@ -39,8 +38,6 @@ BLOCK_NUMBERS=(
   21926929
   23139575
   23135799
-  23044446
-  23044002
   23139688
 )
 
