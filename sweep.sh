@@ -6,7 +6,7 @@ export RUST_BACKTRACE=full
 export CHUNK_SIZE=4194304
 export CHUNK_BATCH_SIZE=8
 export SPLIT_THRESHOLD=1048576
-export RUSTFLAGS="-C target-cpu=native -C target-feature=+avx512f,+avx512ifma,+avx512vl"
+export RUSTFLAGS="-C target-cpu=native"
 export VK_VERIFICATION=true
 
 BLOCK_NUMBERS=(
@@ -52,7 +52,7 @@ CACHE_DIR=./cache_dir
 LOG_DIR=./logs
 # RUST_LOG_LEVEL="info,pico_sdk=debug,pico_vm=debug,rsp_host_executor=info,rsp_client_executor=info,alloy_provider=warn"
 # RUST_LOG_LEVEL=debug
-RUST_LOG_LEVEL=debug
+RUST_LOG_LEVEL=info
 # RUST_LOG="info,pico_sdk=debug,pico_vm=info,rsp_host_executor=info,rsp_client_executor=info,alloy_provider=warn"
 
 # --------------------------------
