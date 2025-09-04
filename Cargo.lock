@@ -4104,7 +4104,7 @@ dependencies = [
 [[package]]
 name = "pico-derive"
 version = "0.1.0"
-source = "git+ssh://git@github.com/brevis-network/brevis-vm.git#3c21ebb6ee4165f65c2e9a6b06f625a862ba12d3"
+source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=sha2-0.10.9#d5a3fef2f55f39ecdeb1d936ffb82fac3d9e3bb3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4114,7 +4114,7 @@ dependencies = [
 [[package]]
 name = "pico-patch-libs"
 version = "1.1.6"
-source = "git+ssh://git@github.com/brevis-network/brevis-vm.git#3c21ebb6ee4165f65c2e9a6b06f625a862ba12d3"
+source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=sha2-0.10.9#d5a3fef2f55f39ecdeb1d936ffb82fac3d9e3bb3"
 dependencies = [
  "bincode",
  "serde",
@@ -4123,7 +4123,7 @@ dependencies = [
 [[package]]
 name = "pico-sdk"
 version = "1.1.6"
-source = "git+ssh://git@github.com/brevis-network/brevis-vm.git#3c21ebb6ee4165f65c2e9a6b06f625a862ba12d3"
+source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=sha2-0.10.9#d5a3fef2f55f39ecdeb1d936ffb82fac3d9e3bb3"
 dependencies = [
  "anyhow",
  "bincode",
@@ -4149,7 +4149,7 @@ dependencies = [
 [[package]]
 name = "pico-vm"
 version = "1.1.6"
-source = "git+ssh://git@github.com/brevis-network/brevis-vm.git#3c21ebb6ee4165f65c2e9a6b06f625a862ba12d3"
+source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=sha2-0.10.9#d5a3fef2f55f39ecdeb1d936ffb82fac3d9e3bb3"
 dependencies = [
  "anyhow",
  "arrayref",
@@ -5398,7 +5398,6 @@ dependencies = [
  "rsp-mpt",
  "serde",
  "serde_json",
- "sha2 0.10.9",
  "tokio",
  "tracing",
  "tracing-subscriber 0.3.19",
@@ -5914,8 +5913,7 @@ dependencies = [
 [[package]]
 name = "sha2"
 version = "0.10.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283"
+source = "git+https://github.com/brevis-network/hashes.git?branch=sha2-0.10.9#2d0f0f9f4abde803c07801ca2fa02fd7911c6b30"
 dependencies = [
  "cfg-if",
  "cpufeatures",

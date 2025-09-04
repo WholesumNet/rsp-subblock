@@ -18,7 +18,8 @@ rsp-client-executor = { path = "../../crates/executor/client" }
 rsp-mpt = { path = "../../crates/mpt" }
 
 # pico
-pico-sdk = { git = "ssh://git@github.com/brevis-network/brevis-vm.git" }
+pico-sdk = { git = "ssh://git@github.com/brevis-network/brevis-vm.git", branch = "sha2-0.10.9" }
+# pico-sdk = { path = "../../../brevis-vm/sdk/sdk" }
 
 # rkyv
 rkyv = "0.8.10"
@@ -29,7 +30,7 @@ tracing = { version = "0.1", features = ["max_level_off", "release_max_level_off
 
 [patch.crates-io]
 # Precompile patches
-sha2 = { git = "https://github.com/brevis-network/hashes.git", package = "sha2", branch = "sha2-0.10.8-v1.0.0"}
+sha2 = { git = "https://github.com/brevis-network/hashes.git", package = "sha2", branch = "sha2-0.10.9"}
 curve25519-dalek-ng = { git = "https://github.com/brevis-network/curve25519-dalek-ng", branch = "patch-v1.0.1"  }
 ecdsa-core = { git = "https://github.com/brevis-network/signatures", package = "ecdsa", branch = "patch-v1.0.1" }
 tiny-keccak = { git = "https://github.com/brevis-network/tiny-keccak", branch = "patch-v1.0.0" }

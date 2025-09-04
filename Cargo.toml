@@ -29,8 +29,10 @@ version = "0.1.0"
 
 [workspace.dependencies]
 # pico
-pico-sdk = { git = "ssh://git@github.com/brevis-network/brevis-vm.git" }
-pico-patch-libs = { git = "ssh://git@github.com/brevis-network/brevis-vm.git" }
+pico-sdk = { git = "ssh://git@github.com/brevis-network/brevis-vm.git", branch = "sha2-0.10.9" }
+pico-patch-libs = { git = "ssh://git@github.com/brevis-network/brevis-vm.git", branch = "sha2-0.10.9" }
+# pico-sdk = { path = "../brevis-vm/sdk/sdk" }
+# pico-patch-libs = { path = "../brevis-vm/sdk/patch-libs" }
 
 tracing = { version = "0.1.40", default-features = false }
 cfg-if = "1.0.0"
@@ -43,7 +45,8 @@ tokio = { version = "1.21", default-features = false, features = [
 serde_json = "1.0.94"
 serde = { version = "1.0", default-features = false, features = ["derive"] }
 futures = "0.3"
-sha2 = "0.10.8"
+sha2 = "0.10.9"
+# sha2 = { path = "../hashes/sha2" }
 url = "2.3"
 thiserror = "1.0.61"
 hex-literal = "0.4.1"
@@ -198,7 +201,9 @@ revm-interpreter = { git = "ssh://git@github.com/brevis-network/revm.git", branc
 revm-precompile = { git = "ssh://git@github.com/brevis-network/revm.git", branch = "pico" }
 revm-primitives = { git = "ssh://git@github.com/brevis-network/revm.git", branch = "pico" }
 revm-state = { git = "ssh://git@github.com/brevis-network/revm.git", branch = "pico" }
+sha2 = { git = "https://github.com/brevis-network/hashes.git", package = "sha2", branch = "sha2-0.10.9"}
 # debug on local
+# sha2 = { path = "../hashes/sha2" }
 # revm = { path = "../revm/crates/revm" }
 # revm-state = { path = "../revm/crates/state" }
 # revm-database = { path = "../revm/crates/database" }

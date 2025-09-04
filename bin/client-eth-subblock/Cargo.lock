@@ -3553,7 +3553,7 @@ dependencies = [
 [[package]]
 name = "pico-derive"
 version = "0.1.0"
-source = "git+ssh://git@github.com/brevis-network/brevis-vm.git#3c21ebb6ee4165f65c2e9a6b06f625a862ba12d3"
+source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=sha2-0.10.9#d5a3fef2f55f39ecdeb1d936ffb82fac3d9e3bb3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3563,7 +3563,7 @@ dependencies = [
 [[package]]
 name = "pico-patch-libs"
 version = "1.1.6"
-source = "git+ssh://git@github.com/brevis-network/brevis-vm.git#3c21ebb6ee4165f65c2e9a6b06f625a862ba12d3"
+source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=sha2-0.10.9#d5a3fef2f55f39ecdeb1d936ffb82fac3d9e3bb3"
 dependencies = [
  "bincode",
  "serde",
@@ -3581,7 +3581,7 @@ dependencies = [
 [[package]]
 name = "pico-sdk"
 version = "1.1.6"
-source = "git+ssh://git@github.com/brevis-network/brevis-vm.git#3c21ebb6ee4165f65c2e9a6b06f625a862ba12d3"
+source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=sha2-0.10.9#d5a3fef2f55f39ecdeb1d936ffb82fac3d9e3bb3"
 dependencies = [
  "anyhow",
  "bincode",
@@ -3596,7 +3596,7 @@ dependencies = [
  "p3-field",
  "p3-koala-bear",
  "p3-mersenne-31",
- "pico-patch-libs 1.1.6 (git+ssh://git@github.com/brevis-network/brevis-vm.git)",
+ "pico-patch-libs 1.1.6 (git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=sha2-0.10.9)",
  "pico-vm",
  "rand 0.8.5",
  "serde",
@@ -3607,7 +3607,7 @@ dependencies = [
 [[package]]
 name = "pico-vm"
 version = "1.1.6"
-source = "git+ssh://git@github.com/brevis-network/brevis-vm.git#3c21ebb6ee4165f65c2e9a6b06f625a862ba12d3"
+source = "git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=sha2-0.10.9#d5a3fef2f55f39ecdeb1d936ffb82fac3d9e3bb3"
 dependencies = [
  "anyhow",
  "arrayref",
@@ -4748,7 +4748,7 @@ dependencies = [
  "bincode",
  "cfg-if",
  "itertools 0.13.0",
- "pico-patch-libs 1.1.6 (git+ssh://git@github.com/brevis-network/brevis-vm.git)",
+ "pico-patch-libs 1.1.6 (git+ssh://git@github.com/brevis-network/brevis-vm.git?branch=sha2-0.10.9)",
  "pico-sdk",
  "reth-chainspec",
  "reth-consensus",
@@ -5130,8 +5130,7 @@ dependencies = [
 [[package]]
 name = "sha2"
 version = "0.10.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283"
+source = "git+https://github.com/brevis-network/hashes.git?branch=sha2-0.10.9#2d0f0f9f4abde803c07801ca2fa02fd7911c6b30"
 dependencies = [
  "cfg-if",
  "cpufeatures",
@@ -6327,8 +6326,3 @@ dependencies = [
 name = "curve25519-dalek-ng"
 version = "4.1.1"
 source = "git+https://github.com/brevis-network/curve25519-dalek-ng?branch=patch-v1.0.1#483a6f0e2a3f63aed44f7f8cbd818281982d6ee7"
-
-[[patch.unused]]
-name = "sha2"
-version = "0.10.8"
-source = "git+https://github.com/brevis-network/hashes.git?branch=sha2-0.10.8-v1.0.0#ddeaa09a00f17a42e9224d2f9aa20646421da3fc"

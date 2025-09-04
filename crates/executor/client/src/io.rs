@@ -211,8 +211,6 @@ pub struct AggregationInput {
     /// to provide the parent state root.
     #[serde_as(as = "Vec<alloy_consensus::serde_bincode_compat::Header>")]
     pub ancestor_headers: Vec<Header>,
-    /// Account bytecodes.
-    pub bytecodes: Vec<Bytecode>,
 }
 
 impl AggregationInput {

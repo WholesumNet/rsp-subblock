@@ -671,7 +671,6 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
         let aggregation_input = AggregationInput {
             current_block: EthereumVariant::pre_process_block(&current_block),
             ancestor_headers,
-            bytecodes: rpc_db.get_bytecodes(),
         };
 
         println!("TIMER fetch all ancestor headers {:.3?}", t_anc.elapsed());
