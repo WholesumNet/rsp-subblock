@@ -32,9 +32,9 @@ use std::{
 use tokio::{task::JoinSet, time::sleep};
 
 /// The maximum number of times to retry fetching a proof.
-const MAX_PROOF_RETRIES: u32 = 3;
+const MAX_PROOF_RETRIES: u32 = 5;
 /// The initial backoff duration for proof fetching retries.
-const INITIAL_RETRY_BACKOFF: Duration = Duration::from_millis(100);
+const INITIAL_RETRY_BACKOFF: Duration = Duration::from_millis(1000);
 
 /// An executor that fetches data from a [Provider] to execute blocks in the [ClientExecutor].
 #[derive(Debug, Clone)]
