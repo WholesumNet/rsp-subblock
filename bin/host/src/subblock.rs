@@ -11,6 +11,9 @@ use pico_sdk::{client::DefaultProverClient, init_logger, load_elf, HashableKey};
 use rsp_client_executor::{io::SubblockHostOutput, ChainVariant};
 use rsp_host_executor::HostExecutor;
 use std::{env, fs::File, io::BufWriter, path::PathBuf, time::Instant};
+use tracing_subscriber::{
+    filter::EnvFilter, fmt, prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt,
+};
 
 mod cli;
 use cli::ProviderArgs;
@@ -40,13 +43,17 @@ struct HostArgs {
 }
 
 fn resolve_dump_dir(dump_dir: Option<&PathBuf>, block_number: u64) -> PathBuf {
-    let gas_segment = match env::var("SUBBLOCK_GAS_LIMIT").ok().and_then(|s| s.parse::<u64>().ok())
+    let gas_segment = match env::var("SUBBLOCK_GAS_LIMIT")
+        .ok()
+        .and_then(|s| s.parse::<u64>().ok())
     {
         Some(g) => format!("gas{}", g),
         None => "gasUNSET".to_string(),
     };
 
-    let base = dump_dir.cloned().unwrap_or_else(|| PathBuf::from("."));
+    let base = dump_dir
+        .cloned()
+        .unwrap_or_else(|| PathBuf::from("."));
 
     base.join(format!("block{}", block_number)).join(gas_segment)
 }
@@ -101,7 +108,7 @@ async fn main() -> eyre::Result<()> {
             // Execute the host.
             let t_prepare_sb_stdin = Instant::now();
             let cache_data = host_executor
-                .execute_subblock(args.block_number, ChainVariant::Ethereum, args.dump_dir.clone())
+                .execute_subblock(args.block_number, ChainVariant::Ethereum)
                 .await
                 .expect("failed to execute host");
 
@@ -199,7 +206,7 @@ async fn schedule_subblock_execution(
     let t = Instant::now();
     // let mut riscv_proofs = Vec::new();
     // let mut combine_proofs = Vec::new();
-    let _subblock_vk = subblock_client.riscv_vk().clone();
+    let subblock_vk = subblock_client.riscv_vk().clone();
 
     for i in 0..inputs.subblock_inputs.len() {
         println!("----------------------Subblock {}-----------------------", i);
@@ -225,8 +232,8 @@ async fn schedule_subblock_execution(
         // Generate proof
         // let start = Instant::now();
         // let (riscv_proof, combine_proof) =
-        //     subblock_client.prove_combine(stdin_builder.clone()).expect("Failed to generate
-        // proof"); let elapsed = start.elapsed().as_secs_f64();
+        //     subblock_client.prove_combine(stdin_builder.clone()).expect("Failed to generate proof");
+        // let elapsed = start.elapsed().as_secs_f64();
 
         // tracing::info!("Subblock {}: prove duration: {:?}", i, elapsed,);
 
@@ -290,11 +297,11 @@ async fn schedule_subblock_execution(
     //     rkyv::from_bytes::<EthereumState, rkyv::rancor::BoxedError>(&aligned_vec).unwrap();
     // let parent_state_root = parent_state.state_root();
 
-    let _ = dump_agg_stdin_to_files(
+    dump_agg_stdin_to_files(
         &public_values,
         &subblock_client.riscv_vk().hash_u32(),
         &subblock_host_output.agg_input,
-        &out_dir,
+        &out_dir
     );
     stdin_builder.write::<Vec<Vec<u8>>>(&public_values);
     stdin_builder.write::<[u32; 8]>(&subblock_client.riscv_vk().hash_u32());
@@ -393,13 +400,15 @@ async fn schedule_subblock_execution(
 
 use bincode;
 use rsp_client_executor::io::AggregationInput;
-use std::{io::Write, path::Path};
+use serde::Serialize;
+use std::io::Write;
+use std::path::Path;
 
 fn dump_agg_stdin_to_files(
     public_values: &Vec<Vec<u8>>,
     vk_digest: &[u32; 8],
     agg_input: &AggregationInput,
-    out_dir: &Path,
+    out_dir: &Path
 ) -> std::io::Result<()> {
     // ensure directory exists
     std::fs::create_dir_all(out_dir)?;
