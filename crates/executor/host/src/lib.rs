@@ -19,10 +19,13 @@ use rsp_client_executor::{
 };
 use rsp_mpt::EthereumState;
 use rsp_primitives::account_proof::eip1186_proof_to_account_proof;
-use rsp_rpc_db::RpcDb;
+use rsp_rpc_db::{RpcDb, RpcDbPersistentData};
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap},
     fmt::Debug,
+    fs::File,
+    io::{BufReader, BufWriter},
+    path::PathBuf,
     sync::Arc,
     time::{Duration, Instant},
 };
@@ -119,10 +122,11 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
         &self,
         block_number: u64,
         variant: ChainVariant,
+        dump_dir: Option<PathBuf>,
     ) -> Result<SubblockHostOutput, HostError> {
         tracing::info!("execute_subblock block_number={block_number}");
         match variant {
-            ChainVariant::Ethereum => self.execute_variant_subblocks(block_number).await,
+            ChainVariant::Ethereum => self.execute_variant_subblocks(block_number, dump_dir).await,
         }
     }
 
@@ -157,7 +161,7 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
 
         // Setup the database for the block executor.
         tracing::info!("setting up the database for the block executor");
-        let rpc_db = RpcDb::new(self.provider.clone(), block_number - 1);
+        let rpc_db = RpcDb::new(self.provider.clone(), block_number - 1, None);
         let cache_db = CacheDB::new(&rpc_db);
 
         // Execute the block and fetch all the necessary data along the way.
@@ -324,6 +328,7 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
     async fn execute_variant_subblocks(
         &self,
         block_number: u64,
+        dump_dir: Option<PathBuf>,
     ) -> Result<SubblockHostOutput, HostError> {
         let t = Instant::now();
         // Fetch the current block and the previous block from the provider.
@@ -360,9 +365,16 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
         // Setup the spec for the block executor.
         tracing::info!("setting up the spec for the block executor");
 
+        // Build rpc-db persistent data file path
+        let rpc_db_path = rpc_db_cache_path(dump_dir, block_number);
+
+        // Try to load rpc-db persistent data
+        let rpc_db_data = load_rpc_db_data(&rpc_db_path);
+        let rpc_db_cache_exists = rpc_db_data.is_some();
+
         // Setup the database for the block executor.
         tracing::info!("setting up the database for the block executor");
-        let mut rpc_db = RpcDb::new(self.provider.clone(), block_number - 1);
+        let mut rpc_db = RpcDb::new(self.provider.clone(), block_number - 1, rpc_db_data);
 
         // Execute the block and fetch all the necessary data along the way.
         tracing::info!(
@@ -758,6 +770,35 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
             all_subblock_outputs.validate().expect("host and client outputs are different");
         }
 
+        // only save the cache rpc-db data if it doesn't exist before
+        if !rpc_db_cache_exists {
+            let _ = store_rpc_db_data(&rpc_db_path, &rpc_db.persistent_data.borrow());
+        }
+
         Ok(all_subblock_outputs)
     }
+}
+
+fn rpc_db_cache_path(dump_dir: Option<PathBuf>, block_number: u64) -> PathBuf {
+    let base = dump_dir.unwrap_or_else(|| PathBuf::from("."));
+    base.join(format!("block_{}.db", block_number))
+}
+
+fn load_rpc_db_data(file_path: &PathBuf) -> Option<RpcDbPersistentData> {
+    if !file_path.exists() {
+        return None;
+    }
+
+    let file = File::open(file_path).ok()?;
+    let reader = BufReader::new(file);
+
+    bincode::deserialize_from(reader).ok()
+}
+
+fn store_rpc_db_data(file_path: &PathBuf, rpc_db_data: &RpcDbPersistentData) -> eyre::Result<()> {
+    let file = File::create(file_path)?;
+    let writer = BufWriter::new(file);
+    bincode::serialize_into(writer, rpc_db_data)?;
+
+    Ok(())
 }
