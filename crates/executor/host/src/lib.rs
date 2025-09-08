@@ -253,7 +253,7 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
             let mut hash_state = executor_outcome.hash_state_slow::<KeccakKeyHasher>();
             // TRICKY: reth may return empty accounts, they must be deleted in the hash state,
             // otherwise the output state root was wrong.
-            hash_state.accounts.retain(|_, v| v.map(|acc| !acc.is_empty()).unwrap_or(false));
+            hash_state.accounts.retain(|_, v| v.map(|acc| !acc.is_empty()).unwrap_or(true));
             mutated_state.update(&hash_state);
             mutated_state.state_root()
         };
@@ -601,9 +601,7 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
             cumulative_executor_outcomes.hash_state_slow::<KeccakKeyHasher>();
         // TRICKY: reth may return empty accounts, they must be deleted in the hash state,
         // otherwise the output state root was wrong.
-        cumulative_state_diffs
-            .accounts
-            .retain(|_, v| v.map(|acc| !acc.is_empty()).unwrap_or(false));
+        cumulative_state_diffs.accounts.retain(|_, v| v.map(|acc| !acc.is_empty()).unwrap_or(true));
 
         // Update the parent state with the cumulative state diffs from all subblocks.
         let mut mutated_state = parent_state.clone();
@@ -731,7 +729,7 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
 
             // TRICKY: reth may return empty accounts, they must be deleted in the hash state,
             // otherwise the output state root was wrong.
-            state_diffs[i].accounts.retain(|_, v| v.map(|acc| !acc.is_empty()).unwrap_or(false));
+            state_diffs[i].accounts.retain(|_, v| v.map(|acc| !acc.is_empty()).unwrap_or(true));
             // Update the big state with the state diff of this subblock, and set the fields of this
             // subblock's input/output accordingly.
             big_state.update(&state_diffs[i]);

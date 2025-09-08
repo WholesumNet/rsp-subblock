@@ -10,6 +10,12 @@ export RUSTFLAGS="-C target-cpu=native"
 export VK_VERIFICATION=true
 
 BLOCK_NUMBERS=(
+  23290155
+  23290281
+  23290946
+  23290789
+  23290160
+  23290454
   23043570
   23043243
   23042521
@@ -74,6 +80,6 @@ for BLOCK_NUMBER in "${BLOCK_NUMBERS[@]}"; do
       --dump-dir "$DUMP_DIR" \
       --execute \
       2>&1 | tee "$log_file"
-      # --cache-dir "$CACHE_DIR" \
+    # --cache-dir "$CACHE_DIR" \
   done
 done

@@ -158,7 +158,7 @@ impl ClientExecutor {
             let mut hash_state = executor_outcome.hash_state_slow::<KeccakKeyHasher>();
             // TRICKY: reth may return empty accounts, they must be deleted in the hash state,
             // otherwise the output state root was wrong.
-            hash_state.accounts.retain(|_, v| v.map(|acc| !acc.is_empty()).unwrap_or(false));
+            hash_state.accounts.retain(|_, v| v.map(|acc| !acc.is_empty()).unwrap_or(true));
             input.parent_state.update(&hash_state);
             input.parent_state.state_root()
         });
@@ -253,7 +253,7 @@ impl ClientExecutor {
             let mut hash_state = executor_outcome.hash_state_slow::<KeccakKeyHasher>();
             // TRICKY: reth may return empty accounts, they must be deleted in the hash state,
             // otherwise the output state root was wrong.
-            hash_state.accounts.retain(|_, v| v.map(|acc| !acc.is_empty()).unwrap_or(false));
+            hash_state.accounts.retain(|_, v| v.map(|acc| !acc.is_empty()).unwrap_or(true));
 
             // Get the output state root by applying the diff to the input state.
             input_state.update(&hash_state);
