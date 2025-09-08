@@ -12,6 +12,24 @@ use revm_database::BundleState;
 use revm_database_interface::DatabaseRef;
 use revm_primitives::{Address, HashMap, B256, U256};
 use revm_state::{AccountInfo, Bytecode};
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct RpcDbPersistentData {
+    /// The persistent accounts, used across multiple subblocks.
+    pub accounts: HashMap<Address, AccountInfo>,
+    /// The persistent storage, used across multiple subblocks.
+    pub storage: HashMap<Address, HashMap<U256, U256>>,
+}
+
+impl Default for RpcDbPersistentData {
+    fn default() -> Self {
+        Self {
+            accounts: HashMap::with_hasher(Default::default()),
+            storage: HashMap::with_hasher(Default::default()),
+        }
+    }
+}
 
 /// A database that fetches data from a [Provider] over a [Transport].
 #[derive(Debug, Clone)]
@@ -26,10 +44,8 @@ pub struct RpcDb<P, N> {
     pub subblock_storage: RefCell<HashMap<Address, HashMap<U256, U256>>>,
     /// The block hashes.
     pub block_hashes: RefCell<HashMap<u64, B256>>,
-    /// The persistent accounts, used across multiple subblocks.
-    pub persistent_accounts: RefCell<HashMap<Address, AccountInfo>>,
-    /// The persistent storage, used across multiple subblocks.
-    pub persistent_storage: RefCell<HashMap<Address, HashMap<U256, U256>>>,
+    /// The persistent data, used across multiple subblocks.
+    pub persistent_data: RefCell<RpcDbPersistentData>,
     /// The oldest block whose header/hash has been requested.
     pub oldest_ancestor: RefCell<u64>,
     /// A phantom type to make the struct generic over the transport.
@@ -49,15 +65,14 @@ pub enum RpcDbError {
 
 impl<P: Provider<N> + Clone, N: Network> RpcDb<P, N> {
     /// Create a new [`RpcDb`].
-    pub fn new(provider: P, block: u64) -> Self {
+    pub fn new(provider: P, block: u64, persistent_data: Option<RpcDbPersistentData>) -> Self {
         RpcDb {
             provider,
             block: block.into(),
             subblock_accounts: RefCell::new(HashMap::with_hasher(Default::default())),
             subblock_storage: RefCell::new(HashMap::with_hasher(Default::default())),
             block_hashes: RefCell::new(HashMap::with_hasher(Default::default())),
-            persistent_accounts: RefCell::new(HashMap::with_hasher(Default::default())),
-            persistent_storage: RefCell::new(HashMap::with_hasher(Default::default())),
+            persistent_data: RefCell::new(persistent_data.unwrap_or_default()),
             oldest_ancestor: RefCell::new(block),
             _phantom: PhantomData,
         }
@@ -68,9 +83,10 @@ impl<P: Provider<N> + Clone, N: Network> RpcDb<P, N> {
         tracing::debug!("fetching account info for address: {}", address);
 
         // Prioritize fetching from the cache.
-        if self.persistent_accounts.borrow().contains_key(&address) {
+        if self.persistent_data.borrow().accounts.contains_key(&address) {
             // Record the account info to the subblock state.
-            let account_info = self.persistent_accounts.borrow().get(&address).unwrap().clone();
+            let account_info =
+                self.persistent_data.borrow().accounts.get(&address).unwrap().clone();
             self.subblock_accounts.borrow_mut().insert(address, account_info.clone());
 
             return Ok(account_info);
@@ -116,7 +132,7 @@ impl<P: Provider<N> + Clone, N: Network> RpcDb<P, N> {
         tracing::debug!("fetching storage value at address: {}, index: {}", address, index);
 
         // Prioritize fetching from the cache.
-        if let Some(storage_map) = self.persistent_storage.borrow().get(&address) {
+        if let Some(storage_map) = self.persistent_data.borrow().storage.get(&address) {
             if let Some(value) = storage_map.get(&index) {
                 // Record the storage value to the subblock state.
                 let mut storage_values = self.subblock_storage.borrow_mut();
@@ -195,15 +211,21 @@ impl<P: Provider<N> + Clone, N: Network> RpcDb<P, N> {
     pub fn update_state_diffs(&mut self, state_diffs: &BundleState) {
         for (address, account) in state_diffs.state.iter() {
             match &account.info {
-                Some(info) => self.persistent_accounts.borrow_mut().insert(*address, info.clone()),
+                Some(info) => {
+                    self.persistent_data.borrow_mut().accounts.insert(*address, info.clone())
+                }
                 None => {
                     // This indicates a destroyed account.
-                    self.persistent_accounts.borrow_mut().insert(*address, AccountInfo::default())
+                    self.persistent_data
+                        .borrow_mut()
+                        .accounts
+                        .insert(*address, AccountInfo::default())
                 }
             };
             account.storage.iter().for_each(|(k, v)| {
-                self.persistent_storage
+                self.persistent_data
                     .borrow_mut()
+                    .storage
                     .entry(*address)
                     .or_default()
                     .insert(*k, v.present_value());
