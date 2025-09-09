@@ -19,7 +19,7 @@ use rsp_client_executor::{
 };
 use rsp_mpt::EthereumState;
 use rsp_primitives::account_proof::eip1186_proof_to_account_proof;
-use rsp_rpc_db::{RpcDb, RpcDbPersistentData};
+use rsp_rpc_db::{RpcDb, RpcDbData};
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap},
     fmt::Debug,
@@ -770,7 +770,7 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
 
         // only save the cache rpc-db data if it doesn't exist before
         if !rpc_db_cache_exists {
-            let _ = store_rpc_db_data(&rpc_db_path, &rpc_db.persistent_data.borrow());
+            let _ = store_rpc_db_data(&rpc_db_path, &rpc_db.cache_data.borrow());
         }
 
         Ok(all_subblock_outputs)
@@ -782,7 +782,7 @@ fn rpc_db_cache_path(dump_dir: Option<PathBuf>, block_number: u64) -> PathBuf {
     base.join(format!("block_{}.db", block_number))
 }
 
-fn load_rpc_db_data(file_path: &PathBuf) -> Option<RpcDbPersistentData> {
+fn load_rpc_db_data(file_path: &PathBuf) -> Option<RpcDbData> {
     if !file_path.exists() {
         return None;
     }
@@ -793,7 +793,7 @@ fn load_rpc_db_data(file_path: &PathBuf) -> Option<RpcDbPersistentData> {
     bincode::deserialize_from(reader).ok()
 }
 
-fn store_rpc_db_data(file_path: &PathBuf, rpc_db_data: &RpcDbPersistentData) -> eyre::Result<()> {
+fn store_rpc_db_data(file_path: &PathBuf, rpc_db_data: &RpcDbData) -> eyre::Result<()> {
     let file = File::create(file_path)?;
     let writer = BufWriter::new(file);
     bincode::serialize_into(writer, rpc_db_data)?;

@@ -15,14 +15,14 @@ use revm_state::{AccountInfo, Bytecode};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct RpcDbPersistentData {
+pub struct RpcDbData {
     /// The persistent accounts, used across multiple subblocks.
     pub accounts: HashMap<Address, AccountInfo>,
     /// The persistent storage, used across multiple subblocks.
     pub storage: HashMap<Address, HashMap<U256, U256>>,
 }
 
-impl Default for RpcDbPersistentData {
+impl Default for RpcDbData {
     fn default() -> Self {
         Self {
             accounts: HashMap::with_hasher(Default::default()),
@@ -38,14 +38,14 @@ pub struct RpcDb<P, N> {
     pub provider: P,
     /// The block to fetch data from.
     pub block: BlockId,
-    /// The subblock's accounts.
-    pub subblock_accounts: RefCell<HashMap<Address, AccountInfo>>,
-    /// The subblock's storage.
-    pub subblock_storage: RefCell<HashMap<Address, HashMap<U256, U256>>>,
     /// The block hashes.
     pub block_hashes: RefCell<HashMap<u64, B256>>,
+    /// The subblock data, used for each subblock.
+    pub subblock_data: RefCell<RpcDbData>,
     /// The persistent data, used across multiple subblocks.
-    pub persistent_data: RefCell<RpcDbPersistentData>,
+    pub persistent_data: RefCell<RpcDbData>,
+    /// The cache data, used for replay.
+    pub cache_data: RefCell<RpcDbData>,
     /// The oldest block whose header/hash has been requested.
     pub oldest_ancestor: RefCell<u64>,
     /// A phantom type to make the struct generic over the transport.
@@ -65,14 +65,14 @@ pub enum RpcDbError {
 
 impl<P: Provider<N> + Clone, N: Network> RpcDb<P, N> {
     /// Create a new [`RpcDb`].
-    pub fn new(provider: P, block: u64, persistent_data: Option<RpcDbPersistentData>) -> Self {
+    pub fn new(provider: P, block: u64, cache_data: Option<RpcDbData>) -> Self {
         RpcDb {
             provider,
             block: block.into(),
-            subblock_accounts: RefCell::new(HashMap::with_hasher(Default::default())),
-            subblock_storage: RefCell::new(HashMap::with_hasher(Default::default())),
             block_hashes: RefCell::new(HashMap::with_hasher(Default::default())),
-            persistent_data: RefCell::new(persistent_data.unwrap_or_default()),
+            subblock_data: RefCell::new(Default::default()),
+            persistent_data: RefCell::new(Default::default()),
+            cache_data: RefCell::new(cache_data.unwrap_or_default()),
             oldest_ancestor: RefCell::new(block),
             _phantom: PhantomData,
         }
@@ -82,12 +82,17 @@ impl<P: Provider<N> + Clone, N: Network> RpcDb<P, N> {
     pub async fn fetch_account_info(&self, address: Address) -> Result<AccountInfo, RpcDbError> {
         tracing::debug!("fetching account info for address: {}", address);
 
-        // Prioritize fetching from the cache.
+        // Prioritize fetching from the persistent or cache data.
         if self.persistent_data.borrow().accounts.contains_key(&address) {
-            // Record the account info to the subblock state.
             let account_info =
                 self.persistent_data.borrow().accounts.get(&address).unwrap().clone();
-            self.subblock_accounts.borrow_mut().insert(address, account_info.clone());
+            self.subblock_data.borrow_mut().accounts.insert(address, account_info.clone());
+
+            return Ok(account_info);
+        }
+        if self.cache_data.borrow().accounts.contains_key(&address) {
+            let account_info = self.cache_data.borrow().accounts.get(&address).unwrap().clone();
+            self.subblock_data.borrow_mut().accounts.insert(address, account_info.clone());
 
             return Ok(account_info);
         }
@@ -118,7 +123,8 @@ impl<P: Provider<N> + Clone, N: Network> RpcDb<P, N> {
         };
 
         // Record the account info to the state.
-        self.subblock_accounts.borrow_mut().insert(address, account_info.clone());
+        self.subblock_data.borrow_mut().accounts.insert(address, account_info.clone());
+        self.cache_data.borrow_mut().accounts.insert(address, account_info.clone());
 
         Ok(account_info)
     }
@@ -131,12 +137,21 @@ impl<P: Provider<N> + Clone, N: Network> RpcDb<P, N> {
     ) -> Result<U256, RpcDbError> {
         tracing::debug!("fetching storage value at address: {}, index: {}", address, index);
 
-        // Prioritize fetching from the cache.
+        // Prioritize fetching from the persistent or cache data.
         if let Some(storage_map) = self.persistent_data.borrow().storage.get(&address) {
             if let Some(value) = storage_map.get(&index) {
                 // Record the storage value to the subblock state.
-                let mut storage_values = self.subblock_storage.borrow_mut();
-                let entry = storage_values.entry(address).or_default();
+                let mut storage_values = self.subblock_data.borrow_mut();
+                let entry = storage_values.storage.entry(address).or_default();
+                entry.insert(index, *value);
+                return Ok(*value);
+            }
+        }
+        if let Some(storage_map) = self.cache_data.borrow().storage.get(&address) {
+            if let Some(value) = storage_map.get(&index) {
+                // Record the storage value to the subblock state.
+                let mut storage_values = self.subblock_data.borrow_mut();
+                let entry = storage_values.storage.entry(address).or_default();
                 entry.insert(index, *value);
                 return Ok(*value);
             }
@@ -151,8 +166,11 @@ impl<P: Provider<N> + Clone, N: Network> RpcDb<P, N> {
             .map_err(|e| RpcDbError::RpcError(e.to_string()))?;
 
         // Record the storage value to the state.
-        let mut storage_values = self.subblock_storage.borrow_mut();
-        let entry = storage_values.entry(address).or_default();
+        let mut storage_values = self.subblock_data.borrow_mut();
+        let entry = storage_values.storage.entry(address).or_default();
+        entry.insert(index, value);
+        let mut storage_values = self.cache_data.borrow_mut();
+        let entry = storage_values.storage.entry(address).or_default();
         entry.insert(index, value);
 
         Ok(value)
@@ -184,8 +202,9 @@ impl<P: Provider<N> + Clone, N: Network> RpcDb<P, N> {
 
     /// Gets all the state keys used. The client uses this to read the actual state data from tries.
     pub fn get_state_requests(&self) -> HashMap<Address, Vec<U256>> {
-        let accounts = self.subblock_accounts.borrow();
-        let storage = self.subblock_storage.borrow();
+        let data = self.subblock_data.borrow();
+        let accounts = &data.accounts;
+        let storage = &data.storage;
 
         accounts
             .keys()
@@ -203,8 +222,8 @@ impl<P: Provider<N> + Clone, N: Network> RpcDb<P, N> {
 
     /// Resets the subblock state, to get ready for the next subblock.
     pub fn advance_subblock(&self) {
-        self.subblock_accounts.borrow_mut().clear();
-        self.subblock_storage.borrow_mut().clear();
+        self.subblock_data.borrow_mut().accounts.clear();
+        self.subblock_data.borrow_mut().storage.clear();
     }
 
     /// Accumulates the subblock's state diffs into the persistent state.
@@ -235,7 +254,7 @@ impl<P: Provider<N> + Clone, N: Network> RpcDb<P, N> {
 
     /// Gets all account bytecodes.
     pub fn get_bytecodes(&self) -> Vec<Bytecode> {
-        let accounts = self.subblock_accounts.borrow();
+        let accounts = &self.subblock_data.borrow().accounts;
 
         accounts
             .values()

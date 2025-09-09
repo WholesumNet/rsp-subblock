@@ -98,12 +98,14 @@ impl EvmFactory for CustomEvmFactory {
             precompile.into()
         });
 
-        let evm = Context::mainnet()
-            .with_db(db)
-            .with_cfg(input.cfg_env)
-            .with_block(input.block_env)
-            .build_mainnet_with_inspector(NoOpInspector {})
-            .with_precompiles(precompiles);
+        let mut ctx =
+            Context::mainnet().with_db(db).with_cfg(input.cfg_env).with_block(input.block_env);
+
+        // disable balance and nonce checks for replay
+        ctx.cfg.disable_balance_check = true;
+        ctx.cfg.disable_nonce_check = true;
+
+        let evm = ctx.build_mainnet_with_inspector(NoOpInspector {}).with_precompiles(precompiles);
 
         EthEvm::new(evm, false)
     }
