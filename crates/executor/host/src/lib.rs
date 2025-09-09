@@ -1,6 +1,6 @@
 mod error;
 
-use alloy_consensus::{Block, TxEnvelope, TxReceipt};
+use alloy_consensus::{Block, BlockHeader, TxEnvelope, TxReceipt};
 use alloy_network::Ethereum;
 use alloy_primitives::Bloom;
 use alloy_provider::Provider;
@@ -42,11 +42,20 @@ pub struct HostExecutor<P: Provider<Ethereum> + Clone> {
     /// The provider which fetches data.
     pub provider: Arc<P>,
 }
+
+/*
 lazy_static::lazy_static! {
     /// Amount of gas used per subblock.
     pub static ref SUBBLOCK_GAS_LIMIT: u64 = std::env::var("SUBBLOCK_GAS_LIMIT")
         .map(|s| s.parse().unwrap())
         .unwrap_or(1_000_000);
+}
+*/
+lazy_static::lazy_static! {
+    /// maximum subblock count to split
+    pub static ref MAX_SUBBLOCK_COUNT: usize = std::env::var("MAX_SUBBLOCK_COUNT")
+        .map(|s| s.parse().unwrap())
+        .unwrap_or(7);
 }
 
 fn merge_state_requests(
@@ -418,15 +427,20 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
 
         println!("TIMER init vectors: {:.3?}", t.elapsed());
 
+        // compute the exactly gas limit for each subblock
+        let subblock_gas_limits = self.compute_subblock_gas_limits(&current_block).await;
+
         loop {
             let t_slice = Instant::now();
             tracing::info!("executing subblock");
+
+            let subblock_gas_limit = subblock_gas_limits[loop_count];
             tracing::info!(
                 "loop count: {:?}, num_transactions_completed: {:?}, all txs num: {:?}, SUBBLOCK_GAS_LIMIT: {}",
                 loop_count,
                 num_transactions_completed as usize,
                 current_block.body.transactions.len(),
-                *SUBBLOCK_GAS_LIMIT
+                subblock_gas_limit,
             );
             loop_count += 1;
             let cache_db = CacheDB::new(&rpc_db);
@@ -445,7 +459,7 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
             let is_first_subblock = num_transactions_completed == 0;
             subblock_input.is_first_subblock = is_first_subblock;
             subblock_input.is_last_subblock = false;
-            subblock_input.subblock_gas_limit = *SUBBLOCK_GAS_LIMIT + cumulative_gas_used;
+            subblock_input.subblock_gas_limit = subblock_gas_limit + cumulative_gas_used;
             subblock_input.starting_gas_used = cumulative_gas_used;
             let starting_gas_used = cumulative_gas_used;
 
@@ -774,6 +788,75 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
         }
 
         Ok(all_subblock_outputs)
+    }
+
+    async fn compute_subblock_gas_limits(&self, block: &reth_primitives::Block) -> Vec<u64> {
+        // call eth_getBlockReceipts to get gas used of each transaction
+        let receipts =
+            self.provider.get_block_receipts(block.number.into()).await.unwrap().unwrap();
+        assert_eq!(receipts.len(), block.body.transactions.len());
+
+        // compute the minimum gas used for each subblock
+        let total_gas = block.gas_used();
+        let max_subblock_count = *MAX_SUBBLOCK_COUNT;
+        let subblock_gas = (total_gas + max_subblock_count as u64) / max_subblock_count as u64;
+
+        // previous collected gas, it's sum of subblock_gas_limits
+        let mut prev = 0;
+        // current accumulated gas
+        let mut curr = 0;
+        // next expected gas
+        let mut next = subblock_gas;
+        // subblock gas limit array for return
+        let mut subblock_gas_limits = Vec::with_capacity(max_subblock_count);
+        // iterate each transaction and compute the accumulated gas
+        for receipt in receipts {
+            // get the transaction gas
+            let tx_gas = receipt.gas_used;
+
+            // each subblock should contain one transaction at least
+            // if plus the current transaction gas is greater than subblock_gas/2, consider this
+            // transaction as a big transaction, add it to the next subblock
+            if curr != prev && curr + tx_gas > next + (subblock_gas >> 1) {
+                assert!(curr > prev);
+                subblock_gas_limits.push(curr - prev);
+
+                prev = curr;
+                curr += tx_gas;
+                next += subblock_gas;
+
+                continue;
+            }
+
+            curr += tx_gas;
+            if curr > next {
+                subblock_gas_limits.push(curr - prev);
+
+                prev = curr;
+                next += subblock_gas;
+            }
+        }
+
+        // add the last subblock
+        if curr != prev {
+            subblock_gas_limits.push(curr - prev);
+        }
+
+        // check subblock maximum count
+        assert!(subblock_gas_limits.len() <= max_subblock_count);
+
+        // check the total gas
+        let all_subblock_gas: u64 = subblock_gas_limits.iter().sum();
+        assert_eq!(total_gas, all_subblock_gas);
+
+        println!(
+            "block-{} is splitted to {} subblock gas limits: {:?}",
+            block.number,
+            subblock_gas_limits.len(),
+            subblock_gas_limits,
+        );
+
+        subblock_gas_limits
     }
 }
 
