@@ -35,6 +35,8 @@ use tokio::{task::JoinSet, time::sleep};
 const MAX_PROOF_RETRIES: u32 = 5;
 /// The initial backoff duration for proof fetching retries.
 const INITIAL_RETRY_BACKOFF: Duration = Duration::from_millis(1000);
+/// The default subblock gas limit
+const DEFAULT_SUBBLOCK_GAS_LIMIT: u64 = 1_000_000;
 
 /// An executor that fetches data from a [Provider] to execute blocks in the [ClientExecutor].
 #[derive(Debug, Clone)]
@@ -795,6 +797,11 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
         let receipts =
             self.provider.get_block_receipts(block.number.into()).await.unwrap().unwrap();
         assert_eq!(receipts.len(), block.body.transactions.len());
+
+        // handle no transaction case
+        if receipts.is_empty() {
+            return vec![DEFAULT_SUBBLOCK_GAS_LIMIT];
+        }
 
         // compute the minimum gas used for each subblock
         let total_gas = block.gas_used();
