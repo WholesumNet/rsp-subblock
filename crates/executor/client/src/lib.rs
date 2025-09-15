@@ -7,7 +7,6 @@ mod utils;
 pub mod custom;
 pub mod error;
 
-use crate::custom::CustomEvmFactory;
 use alloy_consensus::TxReceipt;
 use alloy_eips::eip7685::Requests;
 use alloy_primitives::Bloom;
@@ -34,7 +33,7 @@ use revm::database::WrapDatabaseRef;
 use revm_primitives::B256;
 use rsp_mpt::EthereumState;
 use sha2::{Digest, Sha256};
-use std::{collections::BTreeMap, io::Cursor, iter::once, sync::Arc};
+use std::{collections::BTreeMap, io::Cursor, iter::once};
 
 /// Chain ID for Ethereum Mainnet.
 pub const CHAIN_ID_ETH_MAINNET: u64 = 0x1;
@@ -444,10 +443,7 @@ impl Variant for EthereumVariant {
         chain_spec: &ChainSpec,
         cache_db: DB,
     ) -> Result<BlockExecutionOutput<Receipt>, BlockExecutionError> {
-        let evm_config = EthEvmConfig::new_with_evm_factory(
-            Arc::new(chain_spec.clone()),
-            CustomEvmFactory::new(None),
-        );
+        let evm_config = EthEvmConfig::new(chain_spec.clone().into());
         BasicBlockExecutor::new(evm_config, cache_db).execute(executor_block_input)
     }
 
