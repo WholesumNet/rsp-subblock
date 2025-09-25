@@ -362,6 +362,9 @@ impl ClientExecutor {
             }
         });
 
+        // Merge the same type requests.
+        cumulative_state_diff.merge_requests();
+
         profile!("verify block hashes", {
             let mut reconstructed_block_hashes: BTreeMap<u64, B256> = BTreeMap::new();
             for (child_header, parent_header) in once(&aggregation_input.current_block.header)

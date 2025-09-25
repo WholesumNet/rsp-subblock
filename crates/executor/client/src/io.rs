@@ -1,6 +1,7 @@
 use std::{
     collections::{BTreeMap, HashMap},
     iter::once,
+    mem,
 };
 
 use alloy_eips::eip7685::Requests;
@@ -150,6 +151,26 @@ impl SubblockOutput {
 
         // Add other requests to the current requests.
         self.requests.extend(other.requests);
+    }
+
+    /// Merge the same type requests of subblocks
+    #[inline]
+    pub fn merge_requests(&mut self) {
+        let mut new_requests: Vec<Vec<u8>> = vec![];
+        let requests = mem::take(&mut self.requests).take();
+        for req in requests {
+            if let Some((&first, rest)) = req.split_first() {
+                if let Some(found_req) = new_requests.iter_mut().find(|new_req| new_req[0] == first)
+                {
+                    found_req.extend_from_slice(rest);
+                } else {
+                    new_requests.push(req.into());
+                }
+            }
+        }
+
+        let new_requests = new_requests.into_iter().map(Into::into).collect();
+        self.requests = Requests::new(new_requests);
     }
 }
 
