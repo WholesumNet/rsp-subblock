@@ -18,8 +18,7 @@ rsp-client-executor = { path = "../../crates/executor/client" }
 rsp-mpt = { path = "../../crates/mpt" }
 
 # pico
-pico-sdk = { git = "ssh://git@github.com/brevis-network/brevis-vm.git", branch = "sha2-0.10.9" }
-# pico-sdk = { path = "../../../brevis-vm/sdk/sdk" }
+pico-sdk = { git = "https://github.com/brevis-network/pico.git", branch = "pico-subblock" }
 
 # rkyv
 rkyv = "0.8.10"
