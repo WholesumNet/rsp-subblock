@@ -156,6 +156,11 @@ impl SubblockOutput {
     /// Merge the same type requests of subblocks
     #[inline]
     pub fn merge_requests(&mut self) {
+        if self.requests.len() <= 1 {
+            // uncessary to merge requests in each subblock since only has 0 or 1 request
+            return;
+        }
+
         let mut new_requests: Vec<Vec<u8>> = vec![];
         let requests = mem::take(&mut self.requests).take();
         for req in requests {
