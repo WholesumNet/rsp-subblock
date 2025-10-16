@@ -1,3 +1,7 @@
+pub mod basic;
+pub mod error;
+pub mod execution_witness;
+
 use std::{
     cell::RefCell,
     collections::{BTreeMap, BTreeSet},
@@ -50,17 +54,6 @@ pub struct RpcDb<P, N> {
     pub oldest_ancestor: RefCell<u64>,
     /// A phantom type to make the struct generic over the transport.
     pub _phantom: PhantomData<N>,
-}
-
-/// Errors that can occur when interacting with the [RpcDb].
-#[derive(Debug, Clone, thiserror::Error)]
-pub enum RpcDbError {
-    #[error("failed to fetch data: {0}")]
-    RpcError(String),
-    #[error("failed to find block")]
-    BlockNotFound,
-    #[error("failed to find trie node preimage")]
-    PreimageNotFound,
 }
 
 impl<P: Provider<N> + Clone, N: Network> RpcDb<P, N> {
