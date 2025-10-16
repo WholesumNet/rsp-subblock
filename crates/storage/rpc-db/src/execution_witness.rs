@@ -1,10 +1,4 @@
-use std::{
-    fs::{create_dir_all, File},
-    marker::PhantomData,
-    path::PathBuf,
-    time::Instant,
-};
-
+/*
 use alloy_consensus::Header;
 use alloy_primitives::{map::HashMap, Address, B256};
 use alloy_provider::{ext::DebugApi, Network, Provider};
@@ -17,6 +11,12 @@ use revm_database::{BundleState, DatabaseRef};
 use revm_primitives::{keccak256, ruint::aliases::U256, StorageKey, StorageValue};
 use revm_state::{AccountInfo, Bytecode};
 use rsp_mpt::EthereumState;
+use std::{
+    fs::{create_dir_all, File},
+    marker::PhantomData,
+    path::PathBuf,
+    time::Instant,
+};
 use tracing::info;
 
 use crate::{RpcDb, RpcDbError};
@@ -195,3 +195,4 @@ fn save_execution_witness_to_cache(
         bincode::serialize_into(&mut f, execution_witness).unwrap();
     }
 }
+*/
