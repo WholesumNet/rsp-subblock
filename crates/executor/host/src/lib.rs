@@ -5,7 +5,6 @@ use alloy_network::Ethereum;
 use alloy_primitives::Bloom;
 use alloy_provider::Provider;
 pub use error::Error as HostError;
-use itertools::Itertools;
 use reth_execution_types::ExecutionOutcome;
 use reth_primitives_traits::{proofs, Block as BlockTrait};
 use reth_trie::{AccountProof, KeccakKeyHasher};
@@ -19,7 +18,7 @@ use rsp_client_executor::{
 };
 use rsp_mpt::EthereumState;
 use rsp_primitives::account_proof::eip1186_proof_to_account_proof;
-use rsp_rpc_db::{RpcDb, RpcDbData};
+use rsp_rpc_db::basic::{BasicRpcDb, RpcDbData};
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap},
     fmt::Debug,
@@ -172,7 +171,7 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
 
         // Setup the database for the block executor.
         tracing::info!("setting up the database for the block executor");
-        let rpc_db = RpcDb::new(self.provider.clone(), block_number - 1, None);
+        let rpc_db = BasicRpcDb::new(self.provider.clone(), block_number - 1, None);
         let cache_db = CacheDB::new(&rpc_db);
 
         // Execute the block and fetch all the necessary data along the way.
@@ -385,7 +384,7 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
 
         // Setup the database for the block executor.
         tracing::info!("setting up the database for the block executor");
-        let mut rpc_db = RpcDb::new(self.provider.clone(), block_number - 1, rpc_db_data);
+        let mut rpc_db = BasicRpcDb::new(self.provider.clone(), block_number - 1, rpc_db_data);
 
         // Execute the block and fetch all the necessary data along the way.
         tracing::info!(
