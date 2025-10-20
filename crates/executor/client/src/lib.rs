@@ -286,7 +286,7 @@ impl ClientExecutor {
                 let public_values_digest = Sha256::digest(public_value);
                 cfg_if! {
                     if #[cfg(target_os = "zkvm")] {
-                        pico_sdk::verify::verify_pico_proof(&vkey, &public_values_digest.into());
+                        sp1_zkvm::lib::verify::verify_sp1_proof(&vkey, &public_values_digest.into());
                     }
                 }
                 println!("cycle-tracker-start: deserialize subblock input");

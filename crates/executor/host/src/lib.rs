@@ -5,7 +5,6 @@ use alloy_network::Ethereum;
 use alloy_primitives::Bloom;
 use alloy_provider::Provider;
 pub use error::Error as HostError;
-use itertools::Itertools;
 use reth_execution_types::ExecutionOutcome;
 use reth_primitives_traits::{proofs, Block as BlockTrait};
 use reth_trie::{AccountProof, KeccakKeyHasher};
@@ -27,7 +26,7 @@ use std::{
     io::{BufReader, BufWriter},
     path::PathBuf,
     sync::Arc,
-    time::{Duration, Instant},
+    time::{Duration},
 };
 use tokio::{task::JoinSet, time::sleep};
 
@@ -36,7 +35,7 @@ const MAX_PROOF_RETRIES: u32 = 5;
 /// The initial backoff duration for proof fetching retries.
 const INITIAL_RETRY_BACKOFF: Duration = Duration::from_millis(1000);
 /// The default subblock gas limit
-const DEFAULT_SUBBLOCK_GAS_LIMIT: u64 = 1_000_000;
+const DEFAULT_SUBBLOCK_GAS_LIMIT: u64 = 8_000_000;
 
 /// An executor that fetches data from a [Provider] to execute blocks in the [ClientExecutor].
 #[derive(Debug, Clone)]
@@ -341,7 +340,6 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
         block_number: u64,
         dump_dir: Option<PathBuf>,
     ) -> Result<SubblockHostOutput, HostError> {
-        let t = Instant::now();
         // Fetch the current block and the previous block from the provider.
         tracing::info!("fetching the current block and the previous block");
         let current_block = self
@@ -365,9 +363,6 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
                 let block = block.map_transactions(TxEnvelope::from);
                 block.into_consensus()
             })?;
-
-        println!("TIMER fetch current & parent block:  {:.3?}", t.elapsed());
-        let t = Instant::now();
 
         let total_transactions = current_block.body.transactions.len() as u64;
 
@@ -398,9 +393,6 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
             .try_into_recovered()
             .map_err(|_| HostError::FailedToRecoverSenders)?;
 
-        println!("TIMER preprocess block & create RpcDb: {:.3?}", t.elapsed());
-        let t = Instant::now();
-
         // These accumulate across multiple subblocks.
         let mut cumulative_executor_outcomes = ExecutionOutcome::default();
         let mut cumulative_state_requests = HashMap::new();
@@ -427,13 +419,10 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
         let mut subblock_parent_states = Vec::new();
         let mut loop_count = 0usize;
 
-        println!("TIMER init vectors: {:.3?}", t.elapsed());
-
         // compute the exactly gas limit for each subblock
         let subblock_gas_limits = self.compute_subblock_gas_limits(&current_block).await;
 
         loop {
-            let t_slice = Instant::now();
             tracing::info!("executing subblock");
 
             let subblock_gas_limit = subblock_gas_limits[loop_count];
@@ -466,17 +455,13 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
             let starting_gas_used = cumulative_gas_used;
 
             tracing::info!("num transactions left: {}", subblock_input.body().transactions.len());
-            println!("TIMER prepare subblock_input slice:  {:.3?}", t_slice.elapsed());
-            let t_exec = Instant::now();
 
             // Execute the subblock.
             let spec = EthereumVariant::spec();
             tracing::info!("before cumulative_gas_used = {cumulative_gas_used}");
             let subblock_output = EthereumVariant::execute(&subblock_input, &spec, cache_db)?;
             tracing::info!("after gas_used = {}", subblock_output.result.gas_used);
-            println!("TIMER execute VM (subblock {})   {:.3?}", loop_count - 1, t_exec.elapsed());
 
-            let t_post = Instant::now();
             let num_executed_transactions = subblock_output.receipts.len();
             let upper = num_transactions_completed + num_executed_transactions as u64;
             let is_last_subblock = upper == current_block.body.transactions.len() as u64;
@@ -557,18 +542,12 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
             rpc_db.advance_subblock();
 
             subblock_inputs.push(subblock_input);
-
-            println!(
-                "TIMER post-process (subblock {}): ️  {:.3?}",
-                loop_count - 1,
-                t_post.elapsed()
-            );
+            
             if num_transactions_completed >= current_block.body.transactions.len() as u64 {
                 break;
             }
         }
 
-        let t_storage_proof = Instant::now();
         // Build parent state from modified keys and used keys from this subblock
         let mut before_storage_proofs = Vec::new();
         let mut after_storage_proofs = Vec::new();
@@ -615,12 +594,6 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
             after_storage_proofs.extend(after_handles.join_all().await);
         }
 
-        println!(
-            "TIMER join before & after storage proofs (get from provider):  {:.3?}",
-            t_storage_proof.elapsed()
-        );
-
-        let t_state = Instant::now();
         let parent_state = EthereumState::from_transition_proofs(
             previous_block.state_root,
             &before_storage_proofs.iter().map(|item| (item.address, item.clone())).collect(),
@@ -642,8 +615,6 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
         if state_root != current_block.state_root {
             return Err(HostError::StateRootMismatch(state_root, current_block.state_root));
         }
-        println!("TIMER update parent_state:  {:.3?}", t_state.elapsed());
-        let t_header = Instant::now();
 
         // Derive the block header.
         //
@@ -676,9 +647,7 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
             current_block.header.number,
             header.hash_slow(),
             current_block.state_root
-        );
-        println!("TIMER build+hash header  {:.3?}", t_header.elapsed());
-        let t_anc = Instant::now();
+        );       
 
         // Fetch the parent headers needed to constrain the BLOCKHASH opcode.
         let oldest_ancestor = *rpc_db.oldest_ancestor.borrow();
@@ -700,9 +669,6 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
             current_block: EthereumVariant::pre_process_block(&current_block),
             ancestor_headers,
         };
-
-        println!("TIMER fetch all ancestor headers {:.3?}", t_anc.elapsed());
-        let t_prune = Instant::now();
 
         let mut big_state = parent_state.clone();
         for i in 0..subblock_inputs.len() {
@@ -771,8 +737,6 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
             let subblock_input = &mut subblock_inputs[i];
             subblock_input.block_hashes = block_hashes.clone();
         }
-
-        println!("TIMER prune all subblocks    {:.3?}", t_prune.elapsed());
 
         let all_subblock_outputs = SubblockHostOutput {
             subblock_inputs,

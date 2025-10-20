@@ -1,6 +1,6 @@
 #![feature(trivial_bounds)]
 
-use alloy_primitives::map::{foldhash::HashMapExt, HashMap};
+use alloy_primitives::map::{foldhash::HashMapExt, HashMap, DefaultHashBuilder};
 use itertools::Itertools;
 use reth_trie::{AccountProof, HashedPostState, HashedStorage, TrieAccount};
 use revm::primitives::{Address, B256};
@@ -136,7 +136,8 @@ impl EthereumState {
         touched_state: &HashMap<B256, Vec<B256>>,
     ) -> (HashSet<MptNodeReference>, HashMap<B256, HashSet<MptNodeReference>>) {
         let mut touched_account_refs = HashSet::new();
-        let mut touched_storage_refs = HashMap::<B256, HashSet<MptNodeReference>>::new();
+        let s = DefaultHashBuilder::default();
+        let mut touched_storage_refs = HashMap::<B256, HashSet<MptNodeReference>>::with_hasher(s);
         for (hashed_address_b256, account) in
             post_state.accounts.iter().sorted_by(|a, b| a.0.cmp(b.0))
         {

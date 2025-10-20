@@ -39,6 +39,7 @@ tokio = { version = "1.21", default-features = false, features = [
 serde_json = "1.0.94"
 serde = { version = "1.0", default-features = false, features = ["derive"] }
 futures = "0.3"
+sha2 = "0.10.9"
 url = "2.3"
 thiserror = "1.0.61"
 hex-literal = "0.4.1"
@@ -68,35 +69,35 @@ rsp-mpt = { path = "./crates/mpt" }
 rsp-primitives = { path = "./crates/primitives" }
 
 # reth-subblock
-reth-primitives = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false, features = ["serde-bincode-compat", "std"] }
-reth-primitives-traits = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false }
-reth-codecs = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false }
-reth-consensus = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false }
-reth-evm = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false }
-reth-revm = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false, features = [
+reth-primitives = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false, features = ["serde-bincode-compat", "std"] }
+reth-primitives-traits = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false }
+reth-codecs = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false }
+reth-consensus = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false }
+reth-evm = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false }
+reth-revm = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false, features = [
     "std",
 ] }
-reth-node-ethereum = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false }
-reth-evm-ethereum = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false, features = [
+reth-node-ethereum = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false }
+reth-evm-ethereum = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false, features = [
     "std",
 ] }
-reth-evm-optimism = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false, features = [
+reth-evm-optimism = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false, features = [
     "optimism",
 ] }
-reth-storage-errors = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false, features = [
+reth-storage-errors = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false, features = [
     "std",
 ] }
-reth-trie = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false, features = ["serde"] }
-reth-trie-common = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false }
-reth-chainspec = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false }
-reth-optimism-chainspec = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false }
-reth-optimism-forks = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false }
-reth-execution-errors = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false }
-reth-execution-types = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false }
-reth-db = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false }
-reth-errors = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false }
-reth-ethereum-consensus = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false }
-reth-ethereum-primitives = { git = "https://github.com/wholesumnet/reth-subblock.git", rev = "4c40525", default-features = false, features = [
+reth-trie = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false, features = ["serde"] }
+reth-trie-common = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false }
+reth-chainspec = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false }
+reth-optimism-chainspec = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false }
+reth-optimism-forks = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false }
+reth-execution-errors = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false }
+reth-execution-types = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false }
+reth-db = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false }
+reth-errors = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false }
+reth-ethereum-consensus = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false }
+reth-ethereum-primitives = { git = "https://github.com/brevis-network/reth.git", rev = "d899c7b", default-features = false, features = [
   "serde"
 ] }
 
@@ -137,7 +138,7 @@ alloy-network-primitives = { version = "1.0.23", default-features = false }
 alloy-network = { version = "1.0.13", default-features = false }
 
 # update for sub-block
-alloy-evm = { git = "https://github.com/wholesumnet/alloy-evm.git", branch = "pico", default-features = false }
+alloy-evm = { git = "https://github.com/brevis-network/alloy-evm.git", branch = "pico", default-features = false }
 
 [workspace.lints]
 rust.missing_debug_implementations = "warn"
@@ -145,3 +146,18 @@ rust.unreachable_pub = "warn"
 rust.unused_must_use = "deny"
 rust.rust_2018_idioms = { level = "deny", priority = -1 }
 rustdoc.all = "warn"
+
+[patch.crates-io]
+foldhash = { git = "https://github.com/brevis-network/foldhash.git", branch = "pico" }
+revm = { git = "https://github.com/brevis-network/revm.git", branch = "pico" }
+revm-bytecode = { git = "https://github.com/brevis-network/revm.git", branch = "pico" }
+revm-context = { git = "https://github.com/brevis-network/revm.git", branch = "pico" }
+revm-database = { git = "https://github.com/brevis-network/revm.git", branch = "pico" }
+revm-database-interface = { git = "https://github.com/brevis-network/revm.git", branch = "pico" }
+revm-handler = { git = "https://github.com/brevis-network/revm.git", branch = "pico" }
+revm-inspector = { git = "https://github.com/brevis-network/revm.git", branch = "pico" }
+revm-interpreter = { git = "https://github.com/brevis-network/revm.git", branch = "pico" }
+revm-precompile = { git = "https://github.com/brevis-network/revm.git", branch = "pico" }
+revm-primitives = { git = "https://github.com/brevis-network/revm.git", branch = "pico" }
+revm-state = { git = "https://github.com/brevis-network/revm.git", branch = "pico" }
+sha2 = { git = "https://github.com/brevis-network/hashes.git", package = "sha2", branch = "sha2-0.10.9"}
