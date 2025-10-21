@@ -140,6 +140,9 @@ alloy-network = { version = "1.0.13", default-features = false }
 # update for sub-block
 alloy-evm = { git = "https://github.com/brevis-network/alloy-evm.git", branch = "pico", default-features = false }
 
+# redis
+redis = { version = "0.32", features = ["tokio-comp"] }
+
 [workspace.lints]
 rust.missing_debug_implementations = "warn"
 rust.unreachable_pub = "warn"
