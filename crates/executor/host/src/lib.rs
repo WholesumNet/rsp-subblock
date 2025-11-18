@@ -35,7 +35,7 @@ const MAX_PROOF_RETRIES: u32 = 5;
 /// The initial backoff duration for proof fetching retries.
 const INITIAL_RETRY_BACKOFF: Duration = Duration::from_millis(1000);
 /// The default subblock gas limit
-const DEFAULT_SUBBLOCK_GAS_LIMIT: u64 = 8_000_000;
+const DEFAULT_SUBBLOCK_GAS_LIMIT: u64 = 5_000_000;
 
 /// An executor that fetches data from a [Provider] to execute blocks in the [ClientExecutor].
 #[derive(Debug, Clone)]
@@ -423,11 +423,11 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
         let subblock_gas_limits = self.compute_subblock_gas_limits(&current_block).await;
 
         loop {
-            tracing::info!("executing subblock");
+            tracing::info!("executing subblock:");
 
             let subblock_gas_limit = subblock_gas_limits[loop_count];
             tracing::info!(
-                "loop count: {:?}, num_transactions_completed: {:?}, all txs num: {:?}, SUBBLOCK_GAS_LIMIT: {}",
+                "index: {:?}, num_transactions_completed: {:?}, all txs num: {:?}, gas limit: {}",
                 loop_count,
                 num_transactions_completed as usize,
                 current_block.body.transactions.len(),
@@ -715,6 +715,7 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
 
             let new_serialized_size =
                 rkyv::to_bytes::<rkyv::rancor::Error>(&subblock_parent_state).unwrap().len();
+            tracing::info!("parent state size: {new_serialized_size} bytes");
             tracing::info!(
                 "Pruned state compression ratio: {}",
                 new_serialized_size as f64 / serialized_size as f64

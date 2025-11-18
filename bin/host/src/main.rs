@@ -129,12 +129,12 @@ async fn schedule_subblock_execution(
     dump_dir: Option<PathBuf>,
 ) -> eyre::Result<()> {
     // init redis
-    let redis_client = redis::Client::open("redis://127.0.0.1:6379/")?;
-    let mut redis_con = redis_client.get_connection()?;
-    // subblock stream cleanup
-    let _: () = redis::cmd("DEL")
-        .arg("rsp-subblock-stdin-stream")
-        .execute(&mut redis_con);
+    // let redis_client = redis::Client::open("redis://127.0.0.1:6379/")?;
+    // let mut redis_con = redis_client.get_connection()?;
+    // // subblock stream cleanup
+    // let _: () = redis::cmd("DEL")
+    //     .arg("rsp-subblock-stdin-stream")
+    //     .execute(&mut redis_con);
 
     let (subblock_elf, subblock_vk) = (subblock_pk.elf, subblock_pk.vk);
     let agg_elf = agg_pk.elf;
@@ -174,11 +174,11 @@ async fn schedule_subblock_execution(
         }
 
         // write subblock stdin to redis        
-        let _: () = redis::cmd("XADD")
-            .arg("rsp-subblock-stdin-stream")
-            .arg("*")
-            .arg(&[(i.to_string(), bincode::serialize(&stdin)?)])
-            .query(&mut redis_con)?;  
+        // let _: () = redis::cmd("XADD")
+        //     .arg("rsp-subblock-stdin-stream")
+        //     .arg("*")
+        //     .arg(&[(i.to_string(), bincode::serialize(&stdin)?)])
+        //     .query(&mut redis_con)?;  
 
         if execute {
             let (_public_values, report) = client.execute(&subblock_elf, &stdin).run().unwrap();
@@ -187,11 +187,11 @@ async fn schedule_subblock_execution(
         }
     }
     // notify subblock stdin that push is over
-    let _: () = redis::cmd("XADD")
-        .arg("rsp-subblock-stdin-stream")
-        .arg("*")
-        .arg(&[("<done>", "")])
-        .query(&mut redis_con)?;  
+    // let _: () = redis::cmd("XADD")
+    //     .arg("rsp-subblock-stdin-stream")
+    //     .arg("*")
+    //     .arg(&[("<done>", "")])
+    //     .query(&mut redis_con)?;  
 
     if execute {
         // Execute the aggregation program with deferred proof verification off, since we don't have the proof yet.
@@ -205,20 +205,20 @@ async fn schedule_subblock_execution(
     }
     // write aggregation stdin to redis
     // agg stream cleanup
-    let _: () = redis::cmd("DEL")
-        .arg("rsp-agg-stdin-stream")
-        .execute(&mut redis_con);        
-    let _: () = redis::cmd("XADD")
-        .arg("rsp-agg-stdin-stream")
-        .arg("*")
-        .arg(&[("0", bincode::serialize(&aggregation_stdin)?)])
-        .query(&mut redis_con)?;        
-    // notify aggregation stdin push is over
-    let _: () = redis::cmd("XADD")
-        .arg("rsp-agg-stdin-stream")
-        .arg("*")
-        .arg(&[("<done>", "")])
-        .query(&mut redis_con)?; 
+    // let _: () = redis::cmd("DEL")
+    //     .arg("rsp-agg-stdin-stream")
+    //     .execute(&mut redis_con);        
+    // let _: () = redis::cmd("XADD")
+    //     .arg("rsp-agg-stdin-stream")
+    //     .arg("*")
+    //     .arg(&[("0", bincode::serialize(&aggregation_stdin)?)])
+    //     .query(&mut redis_con)?;        
+    // // notify aggregation stdin push is over
+    // let _: () = redis::cmd("XADD")
+    //     .arg("rsp-agg-stdin-stream")
+    //     .arg("*")
+    //     .arg(&[("<done>", "")])
+    //     .query(&mut redis_con)?; 
 
     Ok(())
 }
