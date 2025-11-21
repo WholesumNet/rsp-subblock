@@ -35,7 +35,7 @@ const MAX_PROOF_RETRIES: u32 = 5;
 /// The initial backoff duration for proof fetching retries.
 const INITIAL_RETRY_BACKOFF: Duration = Duration::from_millis(1000);
 /// The default subblock gas limit
-const DEFAULT_SUBBLOCK_GAS_LIMIT: u64 = 5_000_000;
+const DEFAULT_SUBBLOCK_GAS_LIMIT: u64 = 8_000_000;
 
 /// An executor that fetches data from a [Provider] to execute blocks in the [ClientExecutor].
 #[derive(Debug, Clone)]
@@ -420,11 +420,10 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
         let mut loop_count = 0usize;
 
         // compute the exactly gas limit for each subblock
-        let subblock_gas_limits = self.compute_subblock_gas_limits(&current_block).await;
+        let subblock_gas_limits = self.compute_dynamic_subblock_gas_limits(&current_block).await;
+        tracing::info!("Block is partitioned into `{:?}` subblocks.", subblock_gas_limits);
 
         loop {
-            tracing::info!("executing subblock:");
-
             let subblock_gas_limit = subblock_gas_limits[loop_count];
             tracing::info!(
                 "index: {:?}, num_transactions_completed: {:?}, all txs num: {:?}, gas limit: {}",
@@ -759,6 +758,7 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
         Ok(all_subblock_outputs)
     }
 
+    #[allow(unused)]
     async fn compute_subblock_gas_limits(&self, block: &reth_primitives::Block) -> Vec<u64> {
         // call eth_getBlockReceipts to get gas used of each transaction
         let receipts =
@@ -786,7 +786,7 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
         // iterate each transaction and compute the accumulated gas
         for receipt in receipts {
             // get the transaction gas
-            let tx_gas = receipt.gas_used;
+            let tx_gas = receipt.gas_used;            
 
             // each subblock should contain one transaction at least
             // if plus the current transaction gas is greater than subblock_gas/2, consider this
@@ -831,6 +831,86 @@ impl<P: Provider<Ethereum> + Clone + Debug + 'static> HostExecutor<P> {
         );
 
         subblock_gas_limits
+    }
+
+    
+    async fn compute_dynamic_subblock_gas_limits(&self, block: &reth_primitives::Block) -> Vec<u64> {
+        let block_gas = block.gas_used();        
+        // call eth_getBlockReceipts to get gas used of each transaction
+        let receipts =
+            self.provider.get_block_receipts(block.number.into()).await.unwrap().unwrap();
+        assert_eq!(receipts.len(), block.body.transactions.len());
+
+        // handle no transaction case
+        if receipts.is_empty() {
+            return vec![DEFAULT_SUBBLOCK_GAS_LIMIT];
+        }        
+        let tx_gases: Vec<_> = receipts.into_iter().map(|r| r.gas_used).collect();
+        let largest_tx = *tx_gases.iter().max().unwrap();
+        // println!("block gas: {block_gas}, largest tx: {largest_tx}");    
+        
+        let subblock_gas_limit = std::cmp::max(DEFAULT_SUBBLOCK_GAS_LIMIT, largest_tx);
+        // println!("subblock gas limit: {subblock_gas_limit}");       
+        
+        // phase 1: inspect and form initial subblocks
+        let mut cur_subblock_gas = 0;
+        let mut initial_subblocks = vec![];
+        for (i, gas) in tx_gases.iter().enumerate() {
+            if cur_subblock_gas + gas > subblock_gas_limit {
+                initial_subblocks.push((i - 1, cur_subblock_gas));
+                cur_subblock_gas = *gas;
+            } else {
+                cur_subblock_gas += gas;
+            }
+            if i == tx_gases.len() - 1 {
+                initial_subblocks.push((i, cur_subblock_gas));
+            }
+        }
+        // phase 2: form subblocks with little deviation from the mean
+        let threshold = (subblock_gas_limit as f32 * 0.7) as u64;
+        let mut subblocks = vec![];
+        let mut i = 0usize;
+        while i < initial_subblocks.len() {
+            let (end_tx_index, gas) = initial_subblocks[i];
+            if gas > threshold {        
+                subblocks.push((end_tx_index, gas))
+            } else {
+                if i == 0 {
+                    // first item -> merge with the right item
+                    subblocks.push((
+                        initial_subblocks[i + 1].0,
+                        gas + initial_subblocks[i + 1].1
+                    ));
+                    i += 1;
+                } else if i == initial_subblocks.len() - 1 {
+                    // last item -> merge with the left subblock 
+                    *subblocks.last_mut().unwrap() = (
+                        end_tx_index,
+                        subblocks.last().unwrap().1 + gas
+                    )
+                } else {
+                    if gas + subblocks.last().unwrap().1 < initial_subblocks[i + 1].1 {
+                       // merge with the left subblock 
+                       *subblocks.last_mut().unwrap() = (
+                           end_tx_index,
+                           subblocks.last().unwrap().1 + gas
+                        );
+                    }
+                    else {
+                        // merge with the right item
+                        subblocks.push((
+                            initial_subblocks[i + 1].0,
+                            gas + initial_subblocks[i + 1].1
+                        ));
+                        i += 1;
+                    }
+                }
+            }
+            i += 1;
+        }
+        let cumulative_gas = subblocks.iter().map(|s| s.1).reduce(|acc, s| acc + s).unwrap();
+        assert_eq!(cumulative_gas, block_gas);
+        subblocks.into_iter().map(|s| s.1).collect()
     }
 }
 
