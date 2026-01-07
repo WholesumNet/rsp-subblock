@@ -441,11 +441,11 @@ pub trait WitnessInput {
 pub fn read_aligned_vec<const N: usize>() -> AlignedVec<N> {
     cfg_if::cfg_if! {
         if #[cfg(target_os = "zkvm")] {
-            use pico_patch_libs::{syscall_hint_len, syscall_hint_read};
+            use sp1_zkvm::syscalls::{syscall_hint_len, syscall_hint_read};
             assert!(N % align_of::<u8>() == 0, "Pico zkVM alignment must be a multiple of 4");
 
             // Round up to the nearest multiple of 4 so that the memory allocated is in whole words
-            let len = unsafe { syscall_hint_len() };
+            let len = syscall_hint_len();
             let capacity = (len + 3) / 4 * 4;
 
             // Allocate a buffer of the required length that is 4 byte aligned

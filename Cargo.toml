@@ -25,11 +25,6 @@ exclude = ["**/target"]
 version = "0.1.0"
 
 [workspace.dependencies]
-# pico
-pico-sdk = { git = "https://github.com/brevis-network/pico.git", branch = "pico-subblock" }
-pico-patch-libs = { git = "https://github.com/brevis-network/pico.git", branch = "pico-subblock" }
-# pico-sdk = { path = "../brevis-vm/sdk/sdk" }
-# pico-patch-libs = { path = "../brevis-vm/sdk/patch-libs" }
 
 # misc
 async-trait = "0.1.80"

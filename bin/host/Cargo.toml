@@ -1,6 +1,6 @@
 [package]
 version = "0.1.0"
-name = "rsp"
+name = "subblock"
 edition = "2021"
 
 [dependencies]
@@ -24,12 +24,11 @@ rsp-mpt.workspace = true
 # alloy
 alloy-provider.workspace = true
 
-# pico
-pico-sdk = { workspace = true }
+# sp1-sdk
+sp1-sdk = { version = "5.1.0"}
 
-[[bin]]
-name = "subblock"
-path = "src/subblock.rs"
+[build-dependencies]
+sp1-build = { version = "5.1.0" }
 
 [features]
 default = []
