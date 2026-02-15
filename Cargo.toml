@@ -41,7 +41,8 @@ futures = "0.3"
 hex = "0.4.3"
 hex-literal = "0.4.1"
 itertools = "0.13.0"
-kzg-rs = { git = "https://github.com/brevis-network/kzg-rs", branch = "pico-v0.2.7-fusaka" }
+# kzg-rs = { git = "https://github.com/brevis-network/kzg-rs", branch = "pico-v0.2.7-fusaka" }
+kzg-rs = { git = "https://github.com/succinctlabs/kzg-rs", branch = "fakedev9999/patch-6.0.0-rc.1" }
 lazy_static = "1.5.0"
 rayon = "1.10.0"
 reqwest = "0.12.9"
@@ -152,7 +153,7 @@ alloy-evm = { git = "https://github.com/brevis-network/alloy-evm.git", branch = 
 alloy-primitives = { git = "https://github.com/brevis-network/alloy-core.git", branch = "pico-v1-4-1" }
 # misc
 foldhash = { git = "https://github.com/brevis-network/foldhash.git", branch = "pico-v0-2-0" }
-sha2 = { git = "https://github.com/brevis-network/hashes.git", package = "sha2", branch = "sha2-0.10.9"}
+# sha2 = { git = "https://github.com/brevis-network/hashes.git", package = "sha2", branch = "sha2-0.10.9"}
 # revm
 revm = { git = "https://github.com/brevis-network/revm.git", branch = "pico-v97-31-0-1" }
 revm-bytecode = { git = "https://github.com/brevis-network/revm.git", branch = "pico-v97-31-0-1" }

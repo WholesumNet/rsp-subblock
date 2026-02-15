@@ -8,7 +8,7 @@
 use alloy_provider::ReqwestProvider;
 use clap::Parser;
 use sp1_sdk::{
-    include_elf, HashableKey, Prover, ProverClient, CpuProver, SP1Stdin, SP1VerifyingKey,
+    include_elf, HashableKey, Prover, ProverClient, CpuProver, SP1Stdin, ProvingKey, SP1VerifyingKey,
 };
 use rsp_client_executor::{
     io::{AggregationInput, SubblockHostOutput},
@@ -48,12 +48,14 @@ struct HostArgs {
     /// Where to dump the elf and stdin for the subblock and aggregation programs.
     #[clap(long)]
     dump_dir: Option<PathBuf>,
+
     /// Optional path to the directory containing cached client input. A new cache file will be
     /// created from RPC data if it doesn't already exist.
     #[clap(long)]
     cache_dir: Option<PathBuf>,
 }
 
+#[allow(unused)]
 fn resolve_dump_dir(dump_dir: Option<&PathBuf>, block_number: u64) -> PathBuf {
     let gas_segment = match env::var("SUBBLOCK_GAS_LIMIT").ok().and_then(|s| s.parse::<u64>().ok())
     {
@@ -143,8 +145,7 @@ async fn main() -> eyre::Result<()> {
     let t_post_client_input = Instant::now();
     let t_setup_client = Instant::now();
     // Generate the proof.
-    let client = 
-        tokio::task::spawn_blocking(|| ProverClient::builder().cpu().build()).await.unwrap();    
+    let client = ProverClient::builder().cpu().build().await;    
 
     println!("TIMER_ALL t_setup_client: {:.3?}", t_setup_client.elapsed());
 
@@ -152,8 +153,7 @@ async fn main() -> eyre::Result<()> {
         client,
         args.block_number,
         client_input,
-        args.execute,
-        args.dump_dir,
+        args.execute
     )
     .await?;
 
@@ -169,32 +169,24 @@ async fn schedule_subblock_execution(
     block_number: u64,
     inputs: SubblockHostOutput,
     execute: bool,
-    dump_dir: Option<PathBuf>,
 ) -> eyre::Result<()> {
-    let t_dump = Instant::now();
-    let out_dir = resolve_dump_dir(dump_dir.as_ref(), block_number);
-    std::fs::create_dir_all(&out_dir)?;
-    tracing::info!("Dump directory: {}", out_dir.display());
-
-    println!(
-        "TIMER aggregator stdin & dump_dir in schedule_subblock_execution: {:.3?}",
-        t_dump.elapsed()
-    );
+    let block_dir = format!("./artifacts/{}", block_number);
+    let artifacts_path = Path::new(&block_dir);
+    std::fs::create_dir_all(&artifacts_path)?;    
 
     // Setup the proving key and verification key.
-    let (subblock_pk, subblock_vk) = client.setup(include_elf!("rsp-client-eth-subblock"));
+    let subblock_pk = client.setup(include_elf!("rsp-client-eth-subblock")).await?;
 
-    let (agg_pk, _agg_vk) = client.setup(include_elf!("rsp-client-eth-agg"));
+    let agg_pk = client.setup(include_elf!("rsp-client-eth-agg")).await?;
+    
+    let aggregation_stdin = to_aggregation_stdin(inputs.clone(), subblock_pk.verifying_key());
+    std::fs::write(
+        artifacts_path.join("agg-stdin.bin"),
+        bincode::serialize(&aggregation_stdin)?
+    )?;
 
-    let subblock_elf = subblock_pk.elf;
-    let agg_elf = agg_pk.elf;
-
-    let aggregation_stdin = to_aggregation_stdin(inputs.clone(), &subblock_vk);
-    if let Some(dump_dir) = dump_dir.as_ref() {
-        let stdin_path = dump_dir.join("agg_stdin.bin");
-        std::fs::write(stdin_path, bincode::serialize(&aggregation_stdin)?)?;
-    } 
-
+    let subblock_stdins_path = artifacts_path.join("subblock-stdins");
+    std::fs::create_dir_all(&subblock_stdins_path)?;
     for i in 0..inputs.subblock_inputs.len() {
         println!("----------------------Subblock {}-----------------------", i);
         let input = &inputs.subblock_inputs[i];
@@ -205,16 +197,14 @@ async fn schedule_subblock_execution(
         stdin.write_vec(parent_state.clone());
         
         // Save the elf/stdin pair to the dump directory.
-        if let Some(dump_dir) = dump_dir.as_ref() {
-            let stdin_dir_path = dump_dir.join("subblock_stdins");
-            std::fs::create_dir_all(&stdin_dir_path)?;
-            let stdin_path = stdin_dir_path.join(format!("{}.bin", i));
-            std::fs::write(stdin_path, bincode::serialize(&stdin)?)?;
-        }        
+        std::fs::write(
+            subblock_stdins_path.join(format!("{}.bin", i)),
+            bincode::serialize(&stdin)?
+        )?;
 
         if execute {
             let start = Instant::now();            
-            let (_public_values, report) = client.execute(&subblock_elf, &stdin).run().unwrap();
+            let (_public_values, report) = client.execute(subblock_pk.elf().clone(), stdin).await.unwrap();
             let elapsed = start.elapsed().as_secs_f64();
 
             let subblock_instruction_count = report.total_instruction_count();
@@ -222,7 +212,7 @@ async fn schedule_subblock_execution(
             let hz = subblock_instruction_count as f64 / elapsed;
             let mhz = hz / 1_000_000.0;
 
-            tracing::info!(
+            println!(
                 "Subblock {}: {} instructions in {:.3} s → {:.3} MHz",
                 i,
                 subblock_instruction_count,
@@ -231,24 +221,16 @@ async fn schedule_subblock_execution(
             );
         }
     }
-    println!("----------------------Aggregator-----------------------");
     
-    // // Deserialize the parent state and compute the root.
-    // let mut aligned_vec = AlignedVec::<16>::new();
-    // let mut reader = Cursor::new(&subblock_host_output.agg_parent_state);
-    // aligned_vec.extend_from_reader(&mut reader).unwrap();
-    // let parent_state =
-    //     rkyv::from_bytes::<EthereumState, rkyv::rancor::BoxedError>(&aligned_vec).unwrap();
-    // let parent_state_root = parent_state.state_root();
-
+    println!("----------------------Aggregator-----------------------");
     if execute {
         let start = Instant::now();
         // Execute the aggregation program with deferred proof verification off, since we don't have
         // the proof yet.
         let (_public_values, report) = client
-            .execute(&agg_elf, &aggregation_stdin)
+            .execute(agg_pk.elf().clone(), aggregation_stdin)
             .deferred_proof_verification(false)
-            .run()
+            .await
             .unwrap();
         let elapsed = start.elapsed().as_secs_f64();
         
@@ -256,7 +238,7 @@ async fn schedule_subblock_execution(
         let hz = agg_instruction_count as f64 / elapsed;
         let mhz = hz / 1_000_000.0;
 
-        tracing::info!(
+        println!(
             "Aggregator: {} instructions in {:.3} s → {:.3} MHz",
             agg_instruction_count,
             elapsed,
