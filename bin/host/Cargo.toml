@@ -25,10 +25,10 @@ rsp-mpt.workspace = true
 alloy-provider.workspace = true
 
 # sp1-sdk
-sp1-sdk = { version = "6.0"}
+sp1-sdk = { version = "=6.1.0"}
 
 [build-dependencies]
-sp1-build = { version = "6.0" }
+sp1-build = { version = "=6.1.0" }
 
 [features]
 default = []

@@ -114,12 +114,12 @@ reth-trie-common = { git = "https://github.com/brevis-network/reth.git", rev = "
 # reth-trie-common = { path = "../reth-subblock/crates/trie-common", default-features = false }
 
 # revm
-revm = { git = "https://github.com/brevis-network/revm.git", branch = "pico-v97-31-0-1", features = ["bn", "optional_balance_check", "serde"], default-features = false }
-revm-database = { git = "https://github.com/brevis-network/revm.git", branch = "pico-v97-31-0-1", default-features = false }
-revm-database-interface = { git = "https://github.com/brevis-network/revm.git", branch = "pico-v97-31-0-1", default-features = false }
-revm-interpreter = { git = "https://github.com/brevis-network/revm.git", branch = "pico-v97-31-0-1", default-features = false }
-revm-primitives = { git = "https://github.com/brevis-network/revm.git", branch = "pico-v97-31-0-1", features = ["serde", "std"], default-features = false }
-revm-state = { git = "https://github.com/brevis-network/revm.git", branch = "pico-v97-31-0-1", default-features = false }
+revm = { git = "https://github.com/wholesumnet/revm.git", branch = "hyp6.1", features = ["bn", "optional_balance_check", "serde"], default-features = false }
+revm-database = { git = "https://github.com/wholesumnet/revm.git", branch = "hyp6.1", default-features = false }
+revm-database-interface = { git = "https://github.com/wholesumnet/revm.git", branch = "hyp6.1", default-features = false }
+revm-interpreter = { git = "https://github.com/wholesumnet/revm.git", branch = "hyp6.1", default-features = false }
+revm-primitives = { git = "https://github.com/wholesumnet/revm.git", branch = "hyp6.1", features = ["serde", "std"], default-features = false }
+revm-state = { git = "https://github.com/wholesumnet/revm.git", branch = "hyp6.1", default-features = false }
 
 # alloy
 alloy-consensus = { version = "1.1.0", default-features = false, features = ["serde", "serde-bincode-compat"] }
@@ -155,18 +155,18 @@ alloy-primitives = { git = "https://github.com/brevis-network/alloy-core.git", b
 foldhash = { git = "https://github.com/brevis-network/foldhash.git", branch = "pico-v0-2-0" }
 # sha2 = { git = "https://github.com/brevis-network/hashes.git", package = "sha2", branch = "sha2-0.10.9"}
 # revm
-revm = { git = "https://github.com/brevis-network/revm.git", branch = "pico-v97-31-0-1" }
-revm-bytecode = { git = "https://github.com/brevis-network/revm.git", branch = "pico-v97-31-0-1" }
-revm-context = { git = "https://github.com/brevis-network/revm.git", branch = "pico-v97-31-0-1" }
-revm-context-interface = { git = "https://github.com/brevis-network/revm.git", branch = "pico-v97-31-0-1" }
-revm-database = { git = "https://github.com/brevis-network/revm.git", branch = "pico-v97-31-0-1" }
-revm-database-interface = { git = "https://github.com/brevis-network/revm.git", branch = "pico-v97-31-0-1" }
-revm-handler = { git = "https://github.com/brevis-network/revm.git", branch = "pico-v97-31-0-1" }
-revm-inspector = { git = "https://github.com/brevis-network/revm.git", branch = "pico-v97-31-0-1" }
-revm-interpreter = { git = "https://github.com/brevis-network/revm.git", branch = "pico-v97-31-0-1" }
-revm-precompile = { git = "https://github.com/brevis-network/revm.git", branch = "pico-v97-31-0-1" }
-revm-primitives = { git = "https://github.com/brevis-network/revm.git", branch = "pico-v97-31-0-1" }
-revm-state = { git = "https://github.com/brevis-network/revm.git", branch = "pico-v97-31-0-1" }
+revm = { git = "https://github.com/wholesumnet/revm.git", branch = "hyp6.1" }
+revm-bytecode = { git = "https://github.com/wholesumnet/revm.git", branch = "hyp6.1" }
+revm-context = { git = "https://github.com/wholesumnet/revm.git", branch = "hyp6.1" }
+revm-context-interface = { git = "https://github.com/wholesumnet/revm.git", branch = "hyp6.1" }
+revm-database = { git = "https://github.com/wholesumnet/revm.git", branch = "hyp6.1" }
+revm-database-interface = { git = "https://github.com/wholesumnet/revm.git", branch = "hyp6.1" }
+revm-handler = { git = "https://github.com/wholesumnet/revm.git", branch = "hyp6.1" }
+revm-inspector = { git = "https://github.com/wholesumnet/revm.git", branch = "hyp6.1" }
+revm-interpreter = { git = "https://github.com/wholesumnet/revm.git", branch = "hyp6.1" }
+revm-precompile = { git = "https://github.com/wholesumnet/revm.git", branch = "hyp6.1" }
+revm-primitives = { git = "https://github.com/wholesumnet/revm.git", branch = "hyp6.1" }
+revm-state = { git = "https://github.com/wholesumnet/revm.git", branch = "hyp6.1" }
 
 # debug on local
 # sha2 = { path = "../hashes/sha2" }
