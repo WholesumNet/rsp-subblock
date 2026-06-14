@@ -18,7 +18,7 @@ rsp-client-executor = { path = "../../crates/executor/client" }
 rsp-mpt = { path = "../../crates/mpt" }
 
 # sp1 turbo
-sp1-zkvm = "=6.1.0"
+sp1-zkvm = "=6.2.3"
 
 # rkyv
 rkyv = "0.8.12"
