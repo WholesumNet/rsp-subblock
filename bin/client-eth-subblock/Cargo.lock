@@ -906,20 +906,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bls12_381"
-version = "0.8.0"
-source = "git+https://github.com/sp1-patches/bls12_381?branch=fakedev9999%2Fsp1-6.0.0-rc.1#950918f7fd3616a86a762e9f5d564003c6d5e9e7"
-dependencies = [
- "cfg-if",
- "ff",
- "group",
- "pairing",
- "rand_core 0.6.4",
- "sp1-lib",
- "subtle",
-]
-
-[[package]]
 name = "blst"
 version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1185,7 +1171,8 @@ checksum = "43da5946c66ffcc7745f48db692ffbb10a83bfe0afd96235c5c2a4fb23994929"
 [[package]]
 name = "crypto-bigint"
 version = "0.5.5"
-source = "git+https://github.com/sp1-patches/RustCrypto-bigint?tag=patch-0.5.5-sp1-6.0.0#ef85da866879b5929b1da071ebe92c082b0554b9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0dc92fb57ca44df6db8059111ab3af99a63d5d0f8375d9972e319a379c6bab76"
 dependencies = [
  "generic-array",
  "rand_core 0.6.4",
@@ -2146,7 +2133,7 @@ dependencies = [
 [[package]]
 name = "k256"
 version = "0.13.4"
-source = "git+https://github.com/sp1-patches/elliptic-curves?tag=patch-k256-13.4-sp1-6.0.0-rc.2#31315f46b6a06dea517e9af82ad8ff6431fb1193"
+source = "git+https://github.com/sp1-patches/elliptic-curves?tag=patch-k256-13.4-sp1-6.0.0#476243d31d3ffd9d882d0e5da1f6adaa2a204b62"
 dependencies = [
  "cfg-if",
  "ecdsa 0.16.9 (git+https://github.com/sp1-patches/signatures?tag=sp1-skip-verify-on-recovery)",
@@ -2179,14 +2166,15 @@ dependencies = [
 
 [[package]]
 name = "kzg-rs"
-version = "0.2.7"
-source = "git+https://github.com/succinctlabs/kzg-rs?branch=fakedev9999%2Fpatch-6.0.0-rc.1#785a6e4f4566303ef6cc8f6a77db41a797b55b49"
+version = "0.2.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee8b4f55c3dedcfaa8668de1dfc8469e7a32d441c28edf225ed1f566fb32977d"
 dependencies = [
- "bls12_381",
  "ff",
  "hex",
  "serde_arrays",
  "sha2",
+ "sp1_bls12_381",
  "spin",
 ]
 
@@ -2488,7 +2476,7 @@ dependencies = [
 [[package]]
 name = "p256"
 version = "0.13.2"
-source = "git+https://github.com/sp1-patches/elliptic-curves?tag=patch-p256-13.2-sp1-6.0.0-rc.2#92c2fea0d717f5ac80da18c25ef517b997ce5e18"
+source = "git+https://github.com/sp1-patches/elliptic-curves?tag=patch-p256-13.2-sp1-6.0.0#923794180d3d7716ba3eed94459d4b434f844090"
 dependencies = [
  "ecdsa 0.16.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "elliptic-curve",
@@ -2796,7 +2784,7 @@ dependencies = [
 [[package]]
 name = "primeorder"
 version = "0.13.1"
-source = "git+https://github.com/sp1-patches/elliptic-curves?tag=patch-p256-13.2-sp1-6.0.0-rc.2#92c2fea0d717f5ac80da18c25ef517b997ce5e18"
+source = "git+https://github.com/sp1-patches/elliptic-curves?tag=patch-p256-13.2-sp1-6.0.0#923794180d3d7716ba3eed94459d4b434f844090"
 dependencies = [
  "elliptic-curve",
 ]
@@ -4289,6 +4277,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "sp1_bls12_381"
+version = "0.8.0-sp1-6.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f23e41cd36168cc2e51e5d3e35ff0c34b204d945769a65591a76286d04b51e43"
+dependencies = [
+ "cfg-if",
+ "ff",
+ "group",
+ "pairing",
+ "rand_core 0.6.4",
+ "sp1-lib",
+ "subtle",
+]
+
+[[package]]
 name = "spin"
 version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5186,11 +5189,6 @@ dependencies = [
 ]
 
 [[patch.unused]]
-name = "bls12_381"
-version = "0.8.0"
-source = "git+https://github.com/sp1-patches/bls12_381?tag=patch-0.8.0-sp1-6.0.0-rc.2#675f993eff9121e604dfa6d94cdc672383340da4"
-
-[[patch.unused]]
 name = "substrate-bn-succinct-rs"
 version = "0.6.0"
-source = "git+https://github.com/sp1-patches/bn?tag=patch-0.6.0-sp1-6.0.0-rc.2#ba72050ea2fb7495da90bfad695200feaf9d065b"
+source = "git+https://github.com/sp1-patches/bn?tag=patch-0.6.0-sp1-6.0.0#717dbe5e2270940faa46b646c6b2d639c82fb949"

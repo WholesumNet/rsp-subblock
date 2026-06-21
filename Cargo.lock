@@ -1300,20 +1300,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bls12_381"
-version = "0.8.0"
-source = "git+https://github.com/sp1-patches/bls12_381?branch=fakedev9999%2Fsp1-6.0.0-rc.1#950918f7fd3616a86a762e9f5d564003c6d5e9e7"
-dependencies = [
- "cfg-if",
- "ff",
- "group",
- "pairing",
- "rand_core 0.6.4",
- "sp1-lib",
- "subtle",
-]
-
-[[package]]
 name = "blst"
 version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3243,14 +3229,15 @@ dependencies = [
 
 [[package]]
 name = "kzg-rs"
-version = "0.2.7"
-source = "git+https://github.com/succinctlabs/kzg-rs?branch=fakedev9999%2Fpatch-6.0.0-rc.1#785a6e4f4566303ef6cc8f6a77db41a797b55b49"
+version = "0.2.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee8b4f55c3dedcfaa8668de1dfc8469e7a32d441c28edf225ed1f566fb32977d"
 dependencies = [
- "bls12_381",
  "ff",
  "hex",
  "serde_arrays",
  "sha2",
+ "sp1_bls12_381",
  "spin",
 ]
 
@@ -7277,6 +7264,21 @@ dependencies = [
  "slop-algebra",
  "sp1-lib",
  "sp1-primitives",
+]
+
+[[package]]
+name = "sp1_bls12_381"
+version = "0.8.0-sp1-6.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f23e41cd36168cc2e51e5d3e35ff0c34b204d945769a65591a76286d04b51e43"
+dependencies = [
+ "cfg-if",
+ "ff",
+ "group",
+ "pairing",
+ "rand_core 0.6.4",
+ "sp1-lib",
+ "subtle",
 ]
 
 [[package]]

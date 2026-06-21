@@ -211,7 +211,6 @@ async fn schedule_subblock_execution(
 
             let hz = subblock_instruction_count as f64 / elapsed;
             let mhz = hz / 1_000_000.0;
-
             println!(
                 "Subblock {}: {} instructions in {:.3} s → {:.3} MHz",
                 i,
