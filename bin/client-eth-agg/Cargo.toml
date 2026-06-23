@@ -20,7 +20,7 @@ rsp-client-executor = { path = "../../crates/executor/client" }
 alloy-primitives = { git = "https://github.com/brevis-network/alloy-core.git", branch = "pico-v1-4-1", default-features = false, features = ["map-foldhash", "sha3-keccak"] }
 
 # sp1 turbo
-sp1-zkvm = "=6.2.3"
+sp1-zkvm = "=6.3.0"
 
 # Statically turns off logging
 log = { version = "0.4", features = ["max_level_off", "release_max_level_off"] }
